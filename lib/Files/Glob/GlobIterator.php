@@ -20,6 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare(strict_types=1);
+
 namespace OCA\CMSPico\Files\Glob;
 
 use OCA\CMSPico\Files\FileInterface;

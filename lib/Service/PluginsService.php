@@ -273,7 +273,12 @@ class PluginsService
 
 		$pluginsETag = $this->configService->getAppValue(ConfigService::PLUGINS_ETAG);
 		if ($pluginsETag) {
-			$pluginsFolder = $pluginsBaseFolder->getFolder($pluginsETag);
+			try {
+				$pluginsFolder = $pluginsBaseFolder->getFolder($pluginsETag);
+			} catch (NotFoundException $e) {
+				// ETag folder was deleted externally, will be recreated below
+				$pluginsFolder = null;
+			}
 		}
 
 		if (($renewETag && !$this->renewedETag) || $forceRenewETag || !$pluginsFolder) {
