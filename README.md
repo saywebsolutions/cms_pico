@@ -1,19 +1,6 @@
-> :exclamation: :exclamation: **END OF LIFE NOTICE** :exclamation: :exclamation:
->
-> Development of Pico CMS for Nextcloud has stopped a very long time ago alongside with [Pico](http://picocms.org/). **We strongly advise against using Pico CMS for Nextcloud.** This Nextcloud app isn't compatible with any still supported Nextcloud version, and Pico itself wasn't designed for modern PHP versions. However, please note that there are no known security issues.
->
-> For a very limited number of trusted users, you might want to check out some of Pico's amazing alternatives, like [Grav CMS](https://getgrav.org/), [HTMLy](https://www.htmly.com/), [Automad](https://automad.org/), or [Typemill](https://typemill.net/). You could install these alongside with Nextcloud. If you're an experienced server administrator and/or developer, and know what you're doing, you could possibly even mount the CMS' content directory as [external storage](https://docs.nextcloud.com/server/latest/admin_manual/configuration_files/external_storage_configuration_gui.html) of your Nextcloud. However, be **very careful** not to introduce catastrophic security issues by allowing users to modify active contents and thus execute arbitrary code on your server. Unfortunately we're not aware of any alternative to Pico CMS for Nextcloud.
->
-> If you're interested in taking over Pico's development (and in a possible second step also that of Pico CMS for Nextcloud), please don't hesitate to contact us by creating a [new Issue](https://github.com/picocms/Pico/issues/new) on Pico's GitHub repository. Please provide some *brief* information about the extent of your commitment, your motivation, and your experience with Pico, Nextcloud, PHP programming, and Open Source Software development in general. We're happy to help you take over the baton, but unfortunately are no longer able to maintain this project.
->
-> :exclamation: :exclamation: **END OF LIFE NOTICE** :exclamation: :exclamation:
-
 # Pico CMS for Nextcloud
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Latest Release](https://img.shields.io/github/v/release/nextcloud/cms_pico?sort=semver)](https://apps.nextcloud.com/apps/cms_pico)
-[![Build Status](https://img.shields.io/github/checks-status/nextcloud/cms_pico/master?label=build)](https://github.com/nextcloud/cms_pico/actions/workflows/test.yml)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/nextcloud/cms_pico/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/nextcloud/cms_pico/?branch=master)
+Modernized fork for Nextcloud 30+ and PHP 8.2+.
 
 ## About
 
@@ -30,7 +17,12 @@ Websites will be accessible through URLs like https://cloud.example.com/sites/my
 
 But that wasn't everything… Pico CMS for Nextcloud is highly customizable. You can change Pico’s appearance by using custom themes and add new functionality by using custom plugins. For security reasons users can neither add custom themes nor plugins on their own - but as an admin you can. Plugins and themes aren’t just new "skins" or "widgets", the underlying technologies are powerful frameworks you can leverage to make your users' websites truly unique. However, with great power comes great responsibility. Pico CMS for Nextcloud does its best to prevent users from including scripts into websites, since this might bear security risks (so called "Cross Scripting"). Since this risk doesn't apply to Pico itself, 3rd-party developers of plugins and themes might not be aware of this issue - so be careful when installing custom plugins and themes.
 
-You want to learn more about Pico CMS for Nextcloud? Easy! Just download and enable the app from [Nextcloud's App Store](https://apps.nextcloud.com/apps/cms_pico) and navigate to Nextcloud's settings page. As an admin you'll find two "Pico CMS" sections in your Nextcloud settings - one below "Personal", another below "Administration". The latter allows you to add custom themes, plugins and templates to Pico, as well as tweaking some advanced settings. The "Pico CMS" section below "Personal" exists for all Nextcloud users and allows one to create personal websites. Simply create your first personal website and choose "sample_pico" as website template. Pico's sample contents will explain all you need to know… :wave:
+You want to learn more about Pico CMS for Nextcloud? Easy! Just download and enable the app from [Nextcloud's App Store](https://apps.nextcloud.com/apps/cms_pico) and navigate to Nextcloud's settings page. As an admin you'll find two "Pico CMS" sections in your Nextcloud settings - one below "Personal", another below "Administration". The latter allows you to add custom themes, plugins and templates to Pico, as well as tweaking some advanced settings. The "Pico CMS" section below "Personal" exists for all Nextcloud users and allows one to create personal websites. Simply create your first personal website and choose "sample_pico" as website template. Pico's sample contents will explain all you need to know…
+
+## Requirements
+
+- **Nextcloud 30 - 33**
+- **PHP 8.2+**
 
 ## Installation
 
@@ -40,23 +32,30 @@ Pico CMS for Nextcloud can be found in [Nextcloud's App Store](https://apps.next
 
 ### Manually
 
-1. Open a shell and navigate to Nextcloud's install directory (e.g. `/var/www/html/nextcloud`). Clone Pico CMS for Nextcloud's Git repository to your `apps/cms_pico/` directory:
-   ```
-   $ git clone https://github.com/nextcloud/cms_pico.git apps/cms_pico
-   ```
-
-2. Run `composer install` to install the app's dependencies. If you haven't installed [Composer](https://getcomposer.org/) yet, you must download it first.
-   ```
-   $ cd apps/cms_pico/
-   $ curl -sSL https://getcomposer.org/installer | php
-   $ php composer.phar install
+1. Clone the repository to your Nextcloud apps directory:
+   ```bash
+   cd /var/www/nextcloud/apps
+   git clone https://github.com/saywebsolutions/cms_pico.git cms_pico
+   cd cms_pico
    ```
 
-3. Make sure that your webserver has write permissions on the app's `appdata_public/` directory. You can ensure this by matching the permissions (owner, group and permissions) of Nextcloud's `data/` directory:
+2. Install PHP dependencies:
+   ```bash
+   composer install --no-dev
    ```
-   $ chown --reference=../../data/ appdata_public
-   $ chmod --reference=../../data/ appdata_public
+
+3. Set proper ownership:
+   ```bash
+   sudo chown -R www-data:www-data /var/www/nextcloud/apps/cms_pico
    ```
+
+4. Enable the app:
+   ```bash
+   cd /var/www/nextcloud
+   sudo -u www-data php occ app:enable cms_pico
+   ```
+
+5. Access **Settings → Personal → Pico CMS** to create your first website.
 
 ## Known limitations
 
@@ -68,15 +67,15 @@ For this reason you cannot use HTML features like `<iframe>`, `<audio>`, `<video
 
 ### Nextcloud's Text App
 
-Nextcloud's official [Text](https://apps.nextcloud.com/apps/text) app is incompatible with Pico CMS for Nextcloud, as is destroys otherwise valid Markdown files (it e.g. removes YAML Front Matters). Unfortunately we cannot do anything about this, it's a rather complex issue in the realm of the Text app. Please see [#116](https://github.com/nextcloud/cms_pico/issues/116) for more info.
+Nextcloud's official [Text](https://apps.nextcloud.com/apps/text) app is incompatible with Pico CMS for Nextcloud, as is destroys otherwise valid Markdown files (it e.g. removes YAML Front Matters). Unfortunately we cannot do anything about this, it's a rather complex issue in the realm of the Text app. Please see [#116](https://github.com/saywebsolutions/cms_pico/issues/116) for more info.
 
 In the meantime we recommend using Nextcloud's [Markdown editor](https://apps.nextcloud.com/apps/files_markdown) app or the [Plain text editor](https://apps.nextcloud.com/apps/files_texteditor) app. Please note that Nextcloud's Text app will still interfere with your Nextcloud install (also see [App behaviors](https://github.com/icewind1991/files_markdown#behaviors)), thus we recommend you to disable the Text app altogether.
 
 ### App incompatibilities
 
-Due to how Nextcloud and most other PHP applications handle dependencies, there's a huge potential of dependency conflicts. Due to this some Nextcloud apps have known incompatibilities with Pico CMS for Nextcloud. This is no-one's fault, neither are Nextcloud nor the conflicting apps to blame, this is just some technical limitation of Nextcloud's app infrastructure we cannot solve in the short term. Please see [#97](https://github.com/nextcloud/cms_pico/issues/97) for more info.
+Due to how Nextcloud and most other PHP applications handle dependencies, there's a huge potential of dependency conflicts. Due to this some Nextcloud apps have known incompatibilities with Pico CMS for Nextcloud. This is no-one's fault, neither are Nextcloud nor the conflicting apps to blame, this is just some technical limitation of Nextcloud's app infrastructure we cannot solve in the short term. Please see [#97](https://github.com/saywebsolutions/cms_pico/issues/97) for more info.
 
-In the meantime you must remove all conflicting apps. Known conflicting apps are [Issue Template](https://apps.nextcloud.com/apps/issuetemplate) and [Terms of service](https://apps.nextcloud.com/apps/terms_of_service). If you see the error `"Call to undefined method ParsedownExtra::textElements()"` in Nextcloud's log even though you\'ve removed all conflicting apps, please don't hesitate to [open a new Issue on GitHub](https://github.com/nextcloud/cms_pico/issues/new) with a copy of the error including its stack trace and a complete list of all apps installed.
+In the meantime you must remove all conflicting apps. Known conflicting apps are [Issue Template](https://apps.nextcloud.com/apps/issuetemplate) and [Terms of service](https://apps.nextcloud.com/apps/terms_of_service). If you see the error `"Call to undefined method ParsedownExtra::textElements()"` in Nextcloud's log even though you\'ve removed all conflicting apps, please don't hesitate to [open a new Issue on GitHub](https://github.com/saywebsolutions/cms_pico/issues/new) with a copy of the error including its stack trace and a complete list of all apps installed.
 
 ## Getting help
 
@@ -84,6 +83,69 @@ Something went wrong? You need help? No worries, we will help!
 
 If you want to get started using Pico, please refer to [Pico's user docs](http://picocms.org/docs/). You can find officially supported [plugins](http://picocms.org/plugins/) and [themes](http://picocms.org/themes/) on Pico's website. A greater choice of third-party plugins and themes can be found in [Pico's wiki](https://github.com/picocms/Pico/wiki) on the [plugins](https://github.com/picocms/Pico/wiki/Pico-Plugins) or [themes](https://github.com/picocms/Pico/wiki/Pico-Themes) pages respectively. If you want to create your own plugin or theme, please refer to the [“Getting Help as a developer” section of Pico's docs](http://picocms.org/docs/#getting-help-as-a-developer).
 
-When the docs cannot answer your question, you can get help by either joining us on [#picocms on Libera.Chat](https://web.libera.chat/#picocms) ([logs](http://picocms.org/irc-logs)), or by creating a new thread on [Nextcloud Help](https://help.nextcloud.com/c/apps/cms-pico). When you’re experiencing problems with Pico CMS for Nextcloud, please don’t hesitate to create a new [Issue](https://github.com/nextcloud/cms_pico/issues) on GitHub. Concerning problems with Pico, open a new [Issue](https://github.com/picocms/Pico/issues) on Pico's GitHub repository. If you have problems with plugins or themes, please refer to the website of the developer of this plugin or theme.
+When the docs cannot answer your question, you can get help by either joining us on [#picocms on Libera.Chat](https://web.libera.chat/#picocms) ([logs](http://picocms.org/irc-logs)), or by creating a new thread on [Nextcloud Help](https://help.nextcloud.com/c/apps/cms-pico). When you’re experiencing problems with Pico CMS for Nextcloud, please don’t hesitate to create a new [Issue](https://github.com/saywebsolutions/cms_pico/issues) on GitHub. Concerning problems with Pico, open a new [Issue](https://github.com/picocms/Pico/issues) on Pico's GitHub repository. If you have problems with plugins or themes, please refer to the website of the developer of this plugin or theme.
 
-**Before creating a new Issue,** please make sure the problem wasn’t reported yet using GitHubs search engine on both the [`nextcloud/cms_pico`](https://github.com/nextcloud/cms_pico/search?type=Issues) and [`picocms/Pico`](https://github.com/picocms/Pico/search?type=Issues) repos, as well as the [search of Nextcloud Help](https://help.nextcloud.com/search). Please describe your issue as clear as possible and always include the *exact error message* (if any) as well as all related messages in Nextcloud's logs. Also include the exact *Nextcloud version* and the *version of Pico CMS for Nextcloud* you’re using. Provided that you’re using custom *plugins* and/or *themes*, include a list of them too. We need information about the *actual and expected behavior* , the *steps to reproduce* the problem, and what steps you have taken to resolve the problem by yourself (i.e. *your own troubleshooting*).
+**Before creating a new Issue,** please make sure the problem wasn't reported yet using GitHubs search engine on both the [`nextcloud/cms_pico`](https://github.com/saywebsolutions/cms_pico/search?type=Issues) and [`picocms/Pico`](https://github.com/picocms/Pico/search?type=Issues) repos, as well as the [search of Nextcloud Help](https://help.nextcloud.com/search). Please describe your issue as clear as possible and always include the *exact error message* (if any) as well as all related messages in Nextcloud's logs. Also include the exact *Nextcloud version* and the *version of Pico CMS for Nextcloud* you're using. Provided that you're using custom *plugins* and/or *themes*, include a list of them too. We need information about the *actual and expected behavior* , the *steps to reproduce* the problem, and what steps you have taken to resolve the problem by yourself (i.e. *your own troubleshooting*).
+
+## Custom Domains (Advanced)
+
+By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_name/`. You can map a custom domain to a Pico site using your web server configuration.
+
+### Apache
+
+1. **DNS**: Point your custom domain's A record to your server's IP address.
+
+2. **Create a virtual host** (e.g., `/etc/apache2/sites-available/myblog.com.conf`):
+
+   ```apache
+   <VirtualHost *:80>
+       ServerName myblog.com
+
+       ProxyPreserveHost Off
+       ProxyPass / http://localhost/sites/my_site/
+       ProxyPassReverse / http://localhost/sites/my_site/
+   </VirtualHost>
+   ```
+
+3. **Enable the site and required modules**:
+   ```bash
+   sudo a2enmod proxy proxy_http
+   sudo a2ensite myblog.com.conf
+   sudo systemctl reload apache2
+   ```
+
+4. **Add SSL with Let's Encrypt**:
+   ```bash
+   sudo certbot --apache -d myblog.com
+   ```
+
+### Nginx
+
+1. **DNS**: Point your custom domain's A record to your server's IP address.
+
+2. **Create a server block** (e.g., `/etc/nginx/sites-available/myblog.com`):
+
+   ```nginx
+   server {
+       listen 80;
+       server_name myblog.com;
+
+       location / {
+           proxy_pass http://localhost/sites/my_site/;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
+   ```
+
+3. **Enable the site**:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/myblog.com /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+4. **Add SSL with Let's Encrypt**:
+   ```bash
+   sudo certbot --nginx -d myblog.com
+   ```

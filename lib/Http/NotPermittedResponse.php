@@ -27,19 +27,16 @@ namespace OCA\CMSPico\Http;
 use OCA\CMSPico\AppInfo\Application;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IURLGenerator;
+use OCP\Server;
 
 class NotPermittedResponse extends TemplateResponse
 {
-	/**
-	 * NotPermittedResponse constructor.
-	 *
-	 * @param string|null $message
-	 */
-	public function __construct(string $message = null)
+	public function __construct(?string $message = null)
 	{
 		$params = [
 			'message' => $message,
-			'buttonLink' => \OC::$server->getURLGenerator()->linkToDefaultPageUrl(),
+			'buttonLink' => Server::get(IURLGenerator::class)->linkToDefaultPageUrl(),
 		];
 
 		parent::__construct(Application::APP_NAME, '403', $params, 'guest');

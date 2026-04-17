@@ -34,28 +34,17 @@ use Psr\Log\LoggerInterface;
 
 class StorageScanner
 {
-	/** @var Scanner */
-	private $scanner;
+	private Scanner $scanner;
 
-	/**
-	 * @param IDBConnection    $connection
-	 * @param IEventDispatcher $eventDispatcher
-	 */
-	public function __construct(IDBConnection $connection, IEventDispatcher $eventDispatcher)
-	{
-		$this->connection = \OC::$server->query(IDBConnection::class);
-		$this->eventDispatcher = \OC::$server->query(IEventDispatcher::class);
-
-		/** @var LoggerInterface $logger */
-		$logger = \OC::$server->query(LoggerInterface::class);
-
+	public function __construct(
+		IDBConnection $connection,
+		IEventDispatcher $eventDispatcher,
+		LoggerInterface $logger
+	) {
 		$this->scanner = new Scanner(null, $connection, $eventDispatcher, $logger);
 	}
 
 	/**
-	 * @param string $path
-	 * @param bool   $recursive
-	 *
 	 * @throws NotPermittedException
 	 * @throws NotFoundException
 	 */

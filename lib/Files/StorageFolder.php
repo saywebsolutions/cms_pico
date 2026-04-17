@@ -30,38 +30,33 @@ use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\ITempManager;
+use OCP\Server;
 
 class StorageFolder extends AbstractStorageNode implements FolderInterface
 {
 	use FolderTrait;
 
 	/** @var array<string,string> */
-	private static $localPathCache = [];
+	private static array $localPathCache = [];
 
 	/** @var OCFolder */
 	protected $node;
 
-	/** @var ITempManager */
-	private $tempManager;
+	private ITempManager $tempManager;
 
-	/** @var StorageScanner */
-	private $scanner;
+	private StorageScanner $scanner;
 
-	/** @var StorageFolder|null */
-	protected $rootFolder;
+	protected ?StorageFolder $rootFolder = null;
 
 	/**
 	 * StorageFolder constructor.
 	 *
-	 * @param OCFolder    $folder
-	 * @param string|null $parentPath
-	 *
 	 * @throws InvalidPathException
 	 */
-	public function __construct(OCFolder $folder, string $parentPath = null)
+	public function __construct(OCFolder $folder, ?string $parentPath = null)
 	{
-		$this->tempManager = \OC::$server->getTempManager();
-		$this->scanner = \OC::$server->query(StorageScanner::class);
+		$this->tempManager = Server::get(ITempManager::class);
+		$this->scanner = Server::get(StorageScanner::class);
 
 		parent::__construct($folder, $parentPath);
 	}

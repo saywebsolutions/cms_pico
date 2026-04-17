@@ -26,21 +26,15 @@ namespace OCA\CMSPico\Model;
 
 use OCA\CMSPico\Service\MiscService;
 use OCP\Files\InvalidPathException;
+use OCP\Server;
 use Pico;
 
 class PicoPage
 {
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var WebsiteRequest */
-	private $websiteRequest;
-
-	/** @var Pico */
-	private $pico;
-
-	/** @var string */
-	private $output;
+	private MiscService $miscService;
+	private WebsiteRequest $websiteRequest;
+	private Pico $pico;
+	private string $output;
 
 	/**
 	 * PicoPage constructor.
@@ -51,16 +45,13 @@ class PicoPage
 	 */
 	public function __construct(WebsiteRequest $websiteRequest, Pico $pico, string $output)
 	{
-		$this->miscService = \OC::$server->query(MiscService::class);
+		$this->miscService = Server::get(MiscService::class);
 
 		$this->websiteRequest = $websiteRequest;
 		$this->pico = $pico;
 		$this->output = $output;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getAbsolutePath(): string
 	{
 		$requestFile = $this->pico->getRequestFile();
@@ -73,9 +64,6 @@ class PicoPage
 		return $contentDir . ($this->websiteRequest->getPage() ?: 'index') . $contentExt;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getRelativePath(): string
 	{
 		$requestFile = $this->pico->getRequestFile();
@@ -94,41 +82,26 @@ class PicoPage
 		return ($this->websiteRequest->getPage() ?: 'index');
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getRawContent(): string
 	{
 		return $this->pico->getRawContent() ?? '';
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getMeta(): array
 	{
 		return $this->pico->getFileMeta() ?? [];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getContent(): string
 	{
 		return $this->pico->getFileContent() ?? '';
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function is404Content(): bool
 	{
 		return $this->pico->is404Content();
 	}
 
-	/**
-	 * @return string
-	 */
 	public function render(): string
 	{
 		return $this->output;

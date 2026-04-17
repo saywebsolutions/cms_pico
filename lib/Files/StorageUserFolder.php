@@ -26,18 +26,19 @@ namespace OCA\CMSPico\Files;
 
 use OC\User\NoUserException;
 use OCP\Files\InvalidPathException;
+use OCP\Files\IRootFolder;
+use OCP\Server;
 
 class StorageUserFolder extends StorageFolder
 {
 	/**
-	 * @param string $userId
-	 *
 	 * @throws NoUserException
 	 * @throws InvalidPathException
 	 */
 	public function __construct(string $userId)
 	{
-		$rootFolder = \OC::$server->getRootFolder();
+		/** @var IRootFolder $rootFolder */
+		$rootFolder = Server::get(IRootFolder::class);
 		$userFolder = $rootFolder->getUserFolder($userId);
 
 		// make sure that the user's home directory actually exists

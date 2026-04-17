@@ -32,6 +32,7 @@ use OCA\CMSPico\Files\FileInterface;
 use OCA\CMSPico\Files\FolderInterface;
 use OCA\CMSPico\Files\StorageUserFolder;
 use OCA\CMSPico\Model\Template;
+use OCA\CMSPico\Model\TemplateFactory;
 use OCA\CMSPico\Model\TemplateFile;
 use OCA\CMSPico\Model\Website;
 use OCP\Files\AlreadyExistsException;
@@ -39,22 +40,18 @@ use OCP\Files\NotFoundException;
 
 class TemplatesService
 {
-	/** @var ConfigService */
-	private $configService;
+	private ConfigService $configService;
+	private FileService $fileService;
+	private TemplateFactory $templateFactory;
 
-	/** @var FileService */
-	private $fileService;
-
-	/**
-	 * TemplatesService constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param FileService   $fileService
-	 */
-	public function __construct(ConfigService $configService, FileService $fileService)
-	{
+	public function __construct(
+		ConfigService $configService,
+		FileService $fileService,
+		TemplateFactory $templateFactory
+	) {
 		$this->configService = $configService;
 		$this->fileService = $fileService;
+		$this->templateFactory = $templateFactory;
 	}
 
 	/**
@@ -150,7 +147,7 @@ class TemplatesService
 		}
 
 		$templates = $this->getSystemTemplates();
-		$templates[$templateName] = new Template($templateFolder, Template::TYPE_SYSTEM);
+		$templates[$templateName] = $this->templateFactory->create($templateFolder, Template::TYPE_SYSTEM);
 		$this->configService->setAppValue(ConfigService::SYSTEM_TEMPLATES, json_encode($templates));
 
 		return $templates[$templateName];
@@ -184,7 +181,7 @@ class TemplatesService
 		}
 
 		$templates = $this->getCustomTemplates();
-		$templates[$templateName] = new Template($templateFolder, Template::TYPE_CUSTOM);
+		$templates[$templateName] = $this->templateFactory->create($templateFolder, Template::TYPE_CUSTOM);
 		$this->configService->setAppValue(ConfigService::CUSTOM_TEMPLATES, json_encode($templates));
 
 		return $templates[$templateName];

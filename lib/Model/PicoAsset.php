@@ -25,12 +25,14 @@ declare(strict_types=1);
 namespace OCA\CMSPico\Model;
 
 use OCA\CMSPico\Files\StorageFile;
+use OCP\Files\IMimeTypeDetector;
 use OCP\Files\NotPermittedException;
+use OCP\Server;
 
 class PicoAsset
 {
 	/** @var string[] */
-	private static $secureMimeTypes = [
+	private static array $secureMimeTypes = [
 		'text/plain' => 'text/plain',
 		'image/bmp' => 'image/bmp',
 		'image/gif' => 'image/gif',
@@ -135,7 +137,7 @@ class PicoAsset
 				$this->secureMimeType = self::$secureMimeTypes[$this->getMimeType()];
 			} else {
 				// fallback to Nextcloud's built-in list of secure mime types
-				$mimeTypeDetector = \OC::$server->getMimeTypeDetector();
+				$mimeTypeDetector = Server::get(IMimeTypeDetector::class);
 				$this->secureMimeType = $mimeTypeDetector->getSecureMimeType($this->getMimeType());
 			}
 		}

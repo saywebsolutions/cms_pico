@@ -37,13 +37,9 @@ use function OCA\CMSPico\t;
 
 class Theme implements \JsonSerializable
 {
-	/** @var int */
 	public const TYPE_SYSTEM = 1;
-
-	/** @var int */
 	public const TYPE_CUSTOM = 2;
 
-	/** @var int[] */
 	public const THEME_API_VERSIONS = [
 		Pico::API_VERSION_0,
 		Pico::API_VERSION_1,
@@ -51,62 +47,44 @@ class Theme implements \JsonSerializable
 		Pico::API_VERSION_3,
 	];
 
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var FolderInterface */
-	private $folder;
-
-	/** @var int */
-	private $type;
-
-	/** @var bool|null */
-	private $compat;
-
-	/** @var ThemeNotCompatibleException|null */
-	private $compatException;
+	private MiscService $miscService;
+	private FolderInterface $folder;
+	private int $type;
+	private ?bool $compat = null;
+	private ?ThemeNotCompatibleException $compatException = null;
 
 	/**
 	 * Theme constructor.
 	 *
 	 * @param FolderInterface $folder
-	 * @param int             $type
+	 * @param int $type
+	 * @param MiscService $miscService
 	 */
-	public function __construct(FolderInterface $folder, int $type = self::TYPE_SYSTEM)
-	{
-		$this->miscService = \OC::$server->query(MiscService::class);
-
+	public function __construct(
+		FolderInterface $folder,
+		int $type,
+		MiscService $miscService
+	) {
 		$this->folder = $folder;
 		$this->type = $type;
+		$this->miscService = $miscService;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getName(): string
 	{
 		return $this->folder->getName();
 	}
 
-	/**
-	 * @return FolderInterface
-	 */
 	public function getFolder(): FolderInterface
 	{
 		return $this->folder;
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getType(): int
 	{
 		return $this->type;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isCompatible(): bool
 	{
 		if ($this->compat !== null) {
@@ -135,11 +113,11 @@ class Theme implements \JsonSerializable
 		try {
 			try {
 				$this->getFolder()->getFile('index.twig');
-			} catch (InvalidPathException | NotFoundException $e) {
+			} catch (InvalidPathException|NotFoundException $e) {
 				throw new ThemeNotCompatibleException(
 					$this->getName(),
 					t('Incompatible theme: Twig template "{file}" not found.'),
-					[ 'file' => $this->getName() . '/index.twig' ]
+					['file' => $this->getName() . '/index.twig']
 				);
 			}
 
@@ -149,13 +127,13 @@ class Theme implements \JsonSerializable
 
 				$themeConfig = (new YamlParser())->parse($themeConfigYaml);
 				$themeConfig = is_array($themeConfig) ? $themeConfig : [];
-			} catch (InvalidPathException | NotFoundException | NotPermittedException | YamlParseException $e) {
+			} catch (InvalidPathException|NotFoundException|NotPermittedException|YamlParseException $e) {
 				$themeConfig = [];
 			}
 
 			$apiVersion = Pico::API_VERSION_0;
 			if (isset($themeConfig['api_version'])) {
-				if (is_int($themeConfig['api_version']) || preg_match('/^[0-9]+$/', $themeConfig['api_version'])) {
+				if (is_int($themeConfig['api_version']) || preg_match('/^[0-9]+$/', (string) $themeConfig['api_version'])) {
 					$apiVersion = (int) $themeConfig['api_version'];
 				}
 			}
@@ -164,8 +142,8 @@ class Theme implements \JsonSerializable
 				throw new ThemeNotCompatibleException(
 					$this->getName(),
 					t('Incompatible theme: Themes for Pico CMS for Nextcloud must use one of the API versions '
-							. '{compatApiVersions}, but this theme uses API version {apiVersion}.'),
-					[ 'compatApiVersions' => implode(', ', static::THEME_API_VERSIONS), 'apiVersion' => $apiVersion ]
+						. '{compatApiVersions}, but this theme uses API version {apiVersion}.'),
+					['compatApiVersions' => implode(', ', static::THEME_API_VERSIONS), 'apiVersion' => $apiVersion]
 				);
 			}
 
@@ -179,9 +157,6 @@ class Theme implements \JsonSerializable
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	public function toArray(): array
 	{
 		$data = [
@@ -198,9 +173,6 @@ class Theme implements \JsonSerializable
 		return $data;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function jsonSerialize(): array
 	{
 		return $this->toArray();

@@ -36,6 +36,7 @@ use OCA\CMSPico\Exceptions\WebsiteInvalidDataException;
 use OCA\CMSPico\Exceptions\WebsiteInvalidOwnerException;
 use OCA\CMSPico\Exceptions\WebsiteNotFoundException;
 use OCA\CMSPico\Model\Website;
+use OCA\CMSPico\Model\WebsiteFactory;
 use OCA\CMSPico\Service\WebsitesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
@@ -49,30 +50,18 @@ class WebsitesController extends Controller
 {
 	use ControllerTrait;
 
-	/** @var IUserSession */
-	private $userSession;
+	private IUserSession $userSession;
+	private IL10N $l10n;
+	private WebsitesService $websitesService;
+	private WebsiteFactory $websiteFactory;
 
-	/** @var IL10N */
-	private $l10n;
-
-	/** @var WebsitesService */
-	private $websitesService;
-
-	/**
-	 * WebsitesController constructor.
-	 *
-	 * @param IRequest        $request
-	 * @param IUserSession    $userSession
-	 * @param IL10N           $l10n
-	 * @param LoggerInterface $logger
-	 * @param WebsitesService $websitesService
-	 */
 	public function __construct(
 		IRequest $request,
 		IUserSession $userSession,
 		IL10N $l10n,
 		LoggerInterface $logger,
-		WebsitesService $websitesService
+		WebsitesService $websitesService,
+		WebsiteFactory $websiteFactory
 	) {
 		parent::__construct(Application::APP_NAME, $request);
 
@@ -80,6 +69,7 @@ class WebsitesController extends Controller
 		$this->l10n = $l10n;
 		$this->logger = $logger;
 		$this->websitesService = $websitesService;
+		$this->websiteFactory = $websiteFactory;
 	}
 
 	/**
@@ -110,12 +100,14 @@ class WebsitesController extends Controller
 		try {
 			$userId = $this->userSession->getUser()->getUID();
 
-			$website = (new Website())
-				->setName($data['name'] ?? '')
-				->setUserId($userId)
-				->setSite($data['site'] ?? '')
-				->setTheme($data['theme'] ?? '')
-				->setPath($data['path'] ?? '');
+			$websiteData = [
+				'user_id' => $userId,
+				'name' => $data['name'] ?? '',
+				'site' => $data['site'] ?? '',
+				'theme' => $data['theme'] ?? 'default',
+				'path' => $data['path'] ?? '',
+			];
+			$website = $this->websiteFactory->create($websiteData);
 
 			$website->assertValidOwner();
 

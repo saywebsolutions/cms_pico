@@ -35,75 +35,53 @@ use function OCA\CMSPico\t;
 
 class Plugin implements \JsonSerializable
 {
-	/** @var int */
 	public const TYPE_SYSTEM = 1;
-
-	/** @var int */
 	public const TYPE_CUSTOM = 2;
 
-	/** @var int[] */
 	public const PLUGIN_API_VERSIONS = [
 		Pico::API_VERSION_1,
 		Pico::API_VERSION_2,
 		Pico::API_VERSION_3,
 	];
 
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var FolderInterface */
-	private $folder;
-
-	/** @var int */
-	private $type;
-
-	/** @var bool|null */
-	private $compat;
-
-	/** @var PluginNotCompatibleException|null */
-	private $compatException;
+	private MiscService $miscService;
+	private FolderInterface $folder;
+	private int $type;
+	private ?bool $compat = null;
+	private ?PluginNotCompatibleException $compatException = null;
 
 	/**
 	 * Plugin constructor.
 	 *
 	 * @param FolderInterface $folder
-	 * @param int             $type
+	 * @param int $type
+	 * @param MiscService $miscService
 	 */
-	public function __construct(FolderInterface $folder, int $type = self::TYPE_SYSTEM)
-	{
-		$this->miscService = \OC::$server->query(MiscService::class);
-
+	public function __construct(
+		FolderInterface $folder,
+		int $type,
+		MiscService $miscService
+	) {
 		$this->folder = $folder;
 		$this->type = $type;
+		$this->miscService = $miscService;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getName(): string
 	{
 		return $this->folder->getName();
 	}
 
-	/**
-	 * @return FolderInterface
-	 */
 	public function getFolder(): FolderInterface
 	{
 		return $this->folder;
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getType(): int
 	{
 		return $this->type;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isCompatible(): bool
 	{
 		if ($this->compat !== null) {
@@ -129,8 +107,7 @@ class Plugin implements \JsonSerializable
 			return;
 		}
 
-		$includeClosure = static function (string $pluginFile) {
-			/** @noinspection PhpIncludeInspection */
+		$includeClosure = static function (string $pluginFile): void {
 			require_once($pluginFile);
 		};
 
@@ -138,17 +115,17 @@ class Plugin implements \JsonSerializable
 			try {
 				$pluginFile = $this->getFolder()->getFile($this->getName() . '.php');
 				$includeClosure($pluginFile->getLocalPath());
-			} catch (InvalidPathException | NotFoundException $e) {
+			} catch (InvalidPathException|NotFoundException $e) {
 				throw new PluginNotCompatibleException(
 					$this->getName(),
 					t('Incompatible plugin: Plugin file "{file}" not found.'),
-					[ 'file' => $this->getName() . '/' . $this->getName() . '.php' ]
+					['file' => $this->getName() . '/' . $this->getName() . '.php']
 				);
 			} catch (ParseError $e) {
 				throw new PluginNotCompatibleException(
 					$this->getName(),
 					t('Incompatible plugin: PHP parse error in file "{file}".'),
-					[ 'file' => $this->getName() . '/' . $this->getName() . '.php' ]
+					['file' => $this->getName() . '/' . $this->getName() . '.php']
 				);
 			}
 
@@ -157,7 +134,7 @@ class Plugin implements \JsonSerializable
 				throw new PluginNotCompatibleException(
 					$this->getName(),
 					t('Incompatible plugin: Plugin class "{class}" not found.'),
-					[ 'class' => $className ]
+					['class' => $className]
 				);
 			}
 
@@ -165,7 +142,6 @@ class Plugin implements \JsonSerializable
 			if (is_a($className, \PicoPluginInterface::class, true)) {
 				$apiVersion = Pico::API_VERSION_1;
 				if (defined($className . '::API_VERSION')) {
-					/** @noinspection PhpUndefinedFieldInspection */
 					$apiVersion = (int) $className::API_VERSION;
 				}
 			}
@@ -174,8 +150,8 @@ class Plugin implements \JsonSerializable
 				throw new PluginNotCompatibleException(
 					$this->getName(),
 					t('Incompatible plugin: Plugins for Pico CMS for Nextcloud must use one of the API versions '
-							. '{compatApiVersions}, but this plugin uses API version {apiVersion}.'),
-					[ 'compatApiVersions' => implode(', ', static::PLUGIN_API_VERSIONS), 'apiVersion' => $apiVersion ]
+						. '{compatApiVersions}, but this plugin uses API version {apiVersion}.'),
+					['compatApiVersions' => implode(', ', static::PLUGIN_API_VERSIONS), 'apiVersion' => $apiVersion]
 				);
 			}
 
@@ -189,9 +165,6 @@ class Plugin implements \JsonSerializable
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	public function toArray(): array
 	{
 		$data = [
@@ -208,9 +181,6 @@ class Plugin implements \JsonSerializable
 		return $data;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function jsonSerialize(): array
 	{
 		return $this->toArray();

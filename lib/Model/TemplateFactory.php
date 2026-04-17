@@ -22,20 +22,29 @@
 
 declare(strict_types=1);
 
-namespace OCA\CMSPico\ExternalStorage;
+namespace OCA\CMSPico\Model;
 
-use OCA\Files_External\Lib\Backend\Backend as CommonBackend;
-use OCA\Files_External\Lib\Config\IBackendProvider;
-use OCP\Server;
+use OCA\CMSPico\Files\FolderInterface;
+use OCA\CMSPico\Service\MiscService;
 
-class BackendProvider implements IBackendProvider
+class TemplateFactory
 {
-	/**
-	 * @return CommonBackend[]
-	 */
-	public function getBackends(): array
+	private MiscService $miscService;
+
+	public function __construct(MiscService $miscService)
 	{
-		$backend = Server::get(Backend::class);
-		return [ $backend ];
+		$this->miscService = $miscService;
+	}
+
+	/**
+	 * Create a new Template instance.
+	 *
+	 * @param FolderInterface $folder
+	 * @param int $type
+	 * @return Template
+	 */
+	public function create(FolderInterface $folder, int $type = Template::TYPE_SYSTEM): Template
+	{
+		return new Template($folder, $type, $this->miscService);
 	}
 }

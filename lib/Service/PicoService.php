@@ -42,6 +42,8 @@ use OCA\CMSPico\Pico;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use OCP\IConfig;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 class PicoService
@@ -139,7 +141,8 @@ class PicoService
 				$this->getConfigPath(),
 				$this->pluginsService->getPluginsPath(),
 				$this->themesService->getThemesPath(),
-				false
+				false,
+				$this
 			);
 
 			try {
@@ -190,7 +193,7 @@ class PicoService
 				'site_title'     => $website->getName(),
 				'base_url'       => $this->getWebsiteUrl($websiteRequest),
 				'rewrite_url'    => true,
-				'debug'          => \OC::$server->getConfig()->getSystemValue('debug', false),
+				'debug'          => Server::get(IConfig::class)->getSystemValue('debug', false),
 				'timezone'       => $website->getTimeZone(),
 				'theme'          => $website->getTheme(),
 				'themes_url'     => $this->themesService->getThemesUrl(),

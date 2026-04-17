@@ -33,68 +33,47 @@ use function OCA\CMSPico\t;
 
 class Template implements \JsonSerializable
 {
-	/** @var int */
 	public const TYPE_SYSTEM = 1;
-
-	/** @var int */
 	public const TYPE_CUSTOM = 2;
 
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var FolderInterface */
-	private $folder;
-
-	/** @var int */
-	private $type;
-
-	/** @var bool|null */
-	private $compat;
-
-	/** @var TemplateNotCompatibleException|null */
-	private $compatException;
+	private MiscService $miscService;
+	private FolderInterface $folder;
+	private int $type;
+	private ?bool $compat = null;
+	private ?TemplateNotCompatibleException $compatException = null;
 
 	/**
 	 * Template constructor.
 	 *
 	 * @param FolderInterface $folder
-	 * @param int             $type
+	 * @param int $type
+	 * @param MiscService $miscService
 	 */
-	public function __construct(FolderInterface $folder, int $type = self::TYPE_SYSTEM)
-	{
-		$this->miscService = \OC::$server->query(MiscService::class);
-
+	public function __construct(
+		FolderInterface $folder,
+		int $type,
+		MiscService $miscService
+	) {
 		$this->folder = $folder;
 		$this->type = $type;
+		$this->miscService = $miscService;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getName(): string
 	{
 		return $this->folder->getName();
 	}
 
-	/**
-	 * @return FolderInterface
-	 */
 	public function getFolder(): FolderInterface
 	{
 		return $this->folder;
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getType(): int
 	{
 		return $this->type;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isCompatible(): bool
 	{
 		if ($this->compat !== null) {
@@ -123,21 +102,21 @@ class Template implements \JsonSerializable
 		try {
 			try {
 				$this->folder->getFolder('assets');
-			} catch (InvalidPathException | NotFoundException $e) {
+			} catch (InvalidPathException|NotFoundException $e) {
 				throw new TemplateNotCompatibleException(
 					$this->getName(),
 					t('Incompatible template: Required directory "{file}" not found.'),
-					[ 'file' => $this->getName() . '/assets/' ]
+					['file' => $this->getName() . '/assets/']
 				);
 			}
 
 			try {
 				$this->folder->getFolder('content');
-			} catch (InvalidPathException | NotFoundException $e) {
+			} catch (InvalidPathException|NotFoundException $e) {
 				throw new TemplateNotCompatibleException(
 					$this->getName(),
 					t('Incompatible template: Required directory "{file}" not found.'),
-					[ 'file' => $this->getName() . '/content/' ]
+					['file' => $this->getName() . '/content/']
 				);
 			}
 
@@ -151,9 +130,6 @@ class Template implements \JsonSerializable
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	public function toArray(): array
 	{
 		$data = [
@@ -170,9 +146,6 @@ class Template implements \JsonSerializable
 		return $data;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function jsonSerialize(): array
 	{
 		return $this->toArray();

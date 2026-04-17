@@ -44,33 +44,21 @@ class Version010000From000908 extends SimpleMigrationStep
 {
 	use MigrationTrait;
 
-	/** @var IDBConnection */
-	private $databaseConnection;
+	private IDBConnection $databaseConnection;
+	private ConfigService $configService;
+	private TemplatesService $templatesService;
+	private ThemesService $themesService;
+	private FileService $fileService;
 
-	/** @var ConfigService */
-	private $configService;
-
-	/** @var TemplatesService */
-	private $templatesService;
-
-	/** @var ThemesService */
-	private $themesService;
-
-	/** @var FileService */
-	private $fileService;
-
-	/**
-	 * Version010000 constructor.
-	 */
 	public function __construct()
 	{
 		$this->setLogger(Server::get(LoggerInterface::class));
 
-		$this->databaseConnection = \OC::$server->getDatabaseConnection();
-		$this->configService = \OC::$server->query(ConfigService::class);
-		$this->templatesService = \OC::$server->query(TemplatesService::class);
-		$this->themesService = \OC::$server->query(ThemesService::class);
-		$this->fileService = \OC::$server->query(FileService::class);
+		$this->databaseConnection = Server::get(IDBConnection::class);
+		$this->configService = Server::get(ConfigService::class);
+		$this->templatesService = Server::get(TemplatesService::class);
+		$this->themesService = Server::get(ThemesService::class);
+		$this->fileService = Server::get(FileService::class);
 	}
 
 	/**

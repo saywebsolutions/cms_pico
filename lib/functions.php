@@ -22,6 +22,9 @@
 
 namespace OCA\CMSPico;
 
+// Include Pico class aliases for backward compatibility
+require_once __DIR__ . '/Pico/bootstrap.php';
+
 /**
  * Noop l10n function for gettext
  *

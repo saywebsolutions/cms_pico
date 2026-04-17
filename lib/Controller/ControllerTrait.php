@@ -27,25 +27,20 @@ namespace OCA\CMSPico\Controller;
 use OCA\CMSPico\AppInfo\Application;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\IConfig;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 trait ControllerTrait
 {
-	/** @var LoggerInterface */
-	private $logger;
+	private LoggerInterface $logger;
 
-	/**
-	 * @param \Throwable $exception
-	 * @param array      $data
-	 *
-	 * @return DataResponse
-	 */
 	private function createErrorResponse(\Throwable $exception, array $data = []): DataResponse
 	{
 		$this->logger->error($exception, [ 'app' => Application::APP_NAME, 'level' => 2 ]);
 
 		$data['status'] = 0;
-		if (\OC::$server->getSystemConfig()->getValue('debug', false)) {
+		if (Server::get(IConfig::class)->getSystemValue('debug', false)) {
 			$data['exception'] = get_class($exception);
 			$data['exceptionMessage'] = $exception->getMessage();
 			$data['exceptionCode'] = $exception->getCode();

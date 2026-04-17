@@ -27,27 +27,24 @@ namespace OCA\CMSPico\Http;
 use OCA\CMSPico\AppInfo\Application;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IConfig;
+use OCP\IRequest;
+use OCP\Server;
 
 class PicoErrorResponse extends TemplateResponse
 {
-	/** @var \Exception|null */
-	private $exception;
+	private ?\Exception $exception;
 
-	/**
-	 * PicoErrorResponse constructor.
-	 *
-	 * @param string|null $message
-	 * @param \Exception|null $exception
-	 */
-	public function __construct(string $message = null, \Exception $exception = null)
+	public function __construct(?string $message = null, ?\Exception $exception = null)
 	{
 		$this->exception = $exception;
 
+		$request = Server::get(IRequest::class);
 		$params = [
 			'message' => $message,
-			'debugMode' => \OC::$server->getSystemConfig()->getValue('debug', false),
-			'remoteAddr' => \OC::$server->getRequest()->getRemoteAddress(),
-			'requestID' => \OC::$server->getRequest()->getId(),
+			'debugMode' => Server::get(IConfig::class)->getSystemValue('debug', false),
+			'remoteAddr' => $request->getRemoteAddress(),
+			'requestID' => $request->getId(),
 		];
 
 		if ($this->exception !== null) {

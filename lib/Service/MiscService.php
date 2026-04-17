@@ -33,6 +33,7 @@ use OCP\Files\InvalidPathException;
 use OCP\Files\NotPermittedException;
 use OCP\IL10N;
 use OCP\Security\ISecureRandom;
+use OCP\Server;
 
 class MiscService
 {
@@ -206,7 +207,7 @@ class MiscService
 	public function getRandom(int $length = 10, string $prefix = '', string $suffix = ''): string
 	{
 		$randomChars = ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER . ISecureRandom::CHAR_DIGITS;
-		$random = \OC::$server->getSecureRandom()->generate($length, $randomChars);
+		$random = Server::get(ISecureRandom::class)->generate($length, $randomChars);
 		return ($prefix ? $prefix . '.' : '') . $random . ($suffix ? '.' . $suffix : '');
 	}
 

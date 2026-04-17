@@ -29,38 +29,52 @@ use OCA\CMSPico\Listener\ExternalStorageBackendEventListener;
 use OCA\CMSPico\Listener\GroupDeletedEventListener;
 use OCA\CMSPico\Listener\UserDeletedEventListener;
 use OCP\App\AppPathNotFoundException;
+use OCP\App\IAppManager;
 use OCP\AppFramework\App;
-use OCP\EventDispatcher\IEventDispatcher;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\Group\Events\GroupDeletedEvent;
 use OCP\User\Events\UserDeletedEvent;
 
-class Application extends App
+class Application extends App implements IBootstrap
 {
-	/** @var string */
 	public const APP_NAME = 'cms_pico';
 
-	/**
-	 * @param array $urlParams
-	 */
+	private IAppManager $appManager;
+
 	public function __construct(array $urlParams = [])
 	{
 		parent::__construct(self::APP_NAME, $urlParams);
 	}
 
 	/**
-	 * Registers event listeners.
+	 * Register application services and event listeners.
 	 */
-	public function registerEventListener(): void
+	public function register(IRegistrationContext $context): void
 	{
-		/** @var IEventDispatcher $eventDispatcher */
-		$eventDispatcher = \OC::$server->query(IEventDispatcher::class);
-		$eventDispatcher->addServiceListener(UserDeletedEvent::class, UserDeletedEventListener::class);
-		$eventDispatcher->addServiceListener(GroupDeletedEvent::class, GroupDeletedEventListener::class);
-
-		$eventDispatcher->addServiceListener(
+		// Register event listeners
+		$context->registerEventListener(UserDeletedEvent::class, UserDeletedEventListener::class);
+		$context->registerEventListener(GroupDeletedEvent::class, GroupDeletedEventListener::class);
+		$context->registerEventListener(
 			'OCA\\Files_External::loadAdditionalBackends',
 			ExternalStorageBackendEventListener::class
 		);
+	}
+
+	/**
+	 * Boot the application.
+	 */
+	public function boot(IBootContext $context): void
+	{
+		// Load vendor autoload FIRST (required for Twig, Parsedown, etc.)
+		require_once __DIR__ . '/../../vendor/autoload.php';
+
+		// Load functions and Pico bootstrap
+		require_once __DIR__ . '/../functions.php';
+
+		// Store app manager for static helper methods
+		$this->appManager = $context->getServerContainer()->get(IAppManager::class);
 	}
 
 	/**
@@ -71,7 +85,8 @@ class Application extends App
 	public static function getAppPath(): string
 	{
 		try {
-			$appManager = \OC::$server->getAppManager();
+			/** @var IAppManager $appManager */
+			$appManager = \OCP\Server::get(IAppManager::class);
 			return $appManager->getAppPath(self::APP_NAME);
 		} catch (AppPathNotFoundException $e) {
 			return '';
@@ -86,7 +101,8 @@ class Application extends App
 	public static function getAppWebPath(): string
 	{
 		try {
-			$appManager = \OC::$server->getAppManager();
+			/** @var IAppManager $appManager */
+			$appManager = \OCP\Server::get(IAppManager::class);
 			return $appManager->getAppWebPath(self::APP_NAME);
 		} catch (AppPathNotFoundException $e) {
 			return '';
@@ -101,7 +117,8 @@ class Application extends App
 	public static function getAppVersion(): string
 	{
 		try {
-			$appManager = \OC::$server->getAppManager();
+			/** @var IAppManager $appManager */
+			$appManager = \OCP\Server::get(IAppManager::class);
 			return $appManager->getAppVersion(self::APP_NAME);
 		} catch (AppPathNotFoundException $e) {
 			return '';

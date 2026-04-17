@@ -27,7 +27,6 @@ namespace OCA\CMSPico;
 
 use HTMLPurifier;
 use HTMLPurifier_Config;
-use HTMLPurifier_HTML5Config;
 use OCA\CMSPico\Exceptions\WebsiteInvalidFilesystemException;
 use OCA\CMSPico\Files\FileInterface;
 use OCA\CMSPico\Files\FolderInterface;
@@ -35,63 +34,62 @@ use OCA\CMSPico\Files\Glob\GlobIterator;
 use OCA\CMSPico\Files\NodeInterface;
 use OCA\CMSPico\Model\Website;
 use OCA\CMSPico\Model\WebsiteRequest;
+use OCA\CMSPico\Pico\Core\Pico as PicoCore;
 use OCA\CMSPico\Service\PicoService;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use Symfony\Component\Yaml\Exception\ParseException;
 
-class Pico extends \Pico
+class Pico extends PicoCore
 {
 	/**
 	 * API version 0, used by Pico 0.9 and earlier
-	 *
-	 * @var int
 	 */
 	public const API_VERSION_0 = 0;
 
 	/**
 	 * API version 1, used by Pico 1.0
-	 *
-	 * @var int
 	 */
 	public const API_VERSION_1 = 1;
 
 	/**
 	 * API version 2, used by Pico 2.0
-	 *
-	 * @var int
 	 */
 	public const API_VERSION_2 = 2;
 
 	/**
 	 * API version 3, used by Pico 2.1
-	 *
-	 * @var int
 	 */
 	public const API_VERSION_3 = 3;
 
-	/** @var PicoService */
-	private $picoService;
+	private PicoService $picoService;
 
-	/** @var HTMLPurifier */
-	private $htmlPurifier;
+	private ?HTMLPurifier $htmlPurifier = null;
 
-	/** @var WebsiteRequest */
-	private $websiteRequest;
+	private ?WebsiteRequest $websiteRequest = null;
 
-	/** @var Website */
-	private $website;
+	private ?Website $website = null;
 
 	/**
 	 * Pico constructor.
 	 *
-	 * {@inheritDoc}
+	 * @param string $rootDir
+	 * @param string $configDir
+	 * @param string $pluginsDir
+	 * @param string $themesDir
+	 * @param bool $enableLocalPlugins
+	 * @param PicoService $picoService
 	 */
-	public function __construct($rootDir, $configDir, $pluginsDir, $themesDir, $enableLocalPlugins = true)
-	{
-		$this->picoService = \OC::$server->query(PicoService::class);
-
+	public function __construct(
+		string $rootDir,
+		string $configDir,
+		string $pluginsDir,
+		string $themesDir,
+		bool $enableLocalPlugins,
+		PicoService $picoService
+	) {
+		$this->picoService = $picoService;
 		parent::__construct($rootDir, $configDir, $pluginsDir, $themesDir, $enableLocalPlugins);
 	}
 
@@ -104,7 +102,7 @@ class Pico extends \Pico
 	 * @throws NotFoundException
 	 * @throws NotPermittedException
 	 */
-	public function run()
+	public function run(): string
 	{
 		return parent::run();
 	}
@@ -113,10 +111,8 @@ class Pico extends \Pico
 	 * Set's Nextcloud's website and website request instances.
 	 *
 	 * @param WebsiteRequest $websiteRequest Nextcloud's website request instance
-	 *
-	 * @return void
 	 */
-	public function setNextcloudWebsite(WebsiteRequest $websiteRequest)
+	public function setNextcloudWebsite(WebsiteRequest $websiteRequest): void
 	{
 		$this->websiteRequest = $websiteRequest;
 		$this->website = $websiteRequest->getWebsite();
@@ -126,10 +122,8 @@ class Pico extends \Pico
 	 * Set's Pico's request URL.
 	 *
 	 * @param string $requestUrl request URL
-	 *
-	 * @return void
 	 */
-	public function setRequestUrl($requestUrl)
+	public function setRequestUrl(string $requestUrl): void
 	{
 		$this->requestUrl = $requestUrl;
 	}
@@ -138,10 +132,8 @@ class Pico extends \Pico
 	 * Don't let Pico evaluate the request URL.
 	 *
 	 * @see Pico::setRequestUrl()
-	 *
-	 * @return void
 	 */
-	protected function evaluateRequestUrl()
+	protected function evaluateRequestUrl(): void
 	{
 		// do nothing
 	}
@@ -157,12 +149,12 @@ class Pico extends \Pico
 	 * @throws NotFoundException
 	 * @throws NotPermittedException
 	 */
-	public function loadFileContent($absolutePath)
+	public function loadFileContent($absolutePath): string
 	{
 		/** @var FolderInterface $folder */
 		/** @var string $basePath */
 		/** @var string $relativePath */
-		[ $folder, $basePath, $relativePath ] = $this->picoService->getRelativePath($this->website, $absolutePath);
+		[$folder, $basePath, $relativePath] = $this->picoService->getRelativePath($this->website, $absolutePath);
 
 		$file = $folder->getFile($relativePath);
 		return $file->getContent();
@@ -177,7 +169,7 @@ class Pico extends \Pico
 	 * @return array
 	 * @throws ParseException
 	 */
-	public function parseFileMeta($rawContent, array $headers)
+	public function parseFileMeta($rawContent, array $headers): array
 	{
 		$meta = parent::parseFileMeta($rawContent, $headers);
 		return $this->purifyFileMeta($meta);
@@ -197,7 +189,7 @@ class Pico extends \Pico
 			if (is_array($value)) {
 				$newMeta[$key] = $this->purifyFileMeta($value);
 			} else {
-				$newMeta[$key] = $this->getHtmlPurifier()->purify($value);
+				$newMeta[$key] = $this->getHtmlPurifier()->purify((string) $value);
 			}
 		}
 
@@ -212,7 +204,7 @@ class Pico extends \Pico
 	 *
 	 * @return string
 	 */
-	public function parseFileContent($markdown, $singleLine = false)
+	public function parseFileContent($markdown, $singleLine = false): string
 	{
 		$content = parent::parseFileContent($markdown, $singleLine);
 		return $this->purifyFileContent($content);
@@ -240,7 +232,7 @@ class Pico extends \Pico
 		if ($this->htmlPurifier === null) {
 			$this->htmlPurifier = new HTMLPurifier($this->getHtmlPurifierConfig());
 
-			$this->triggerEvent('onHtmlPurifier', [ &$this->htmlPurifier ]);
+			$this->triggerEvent('onHtmlPurifier', [&$this->htmlPurifier]);
 		}
 
 		return $this->htmlPurifier;
@@ -253,19 +245,11 @@ class Pico extends \Pico
 	 */
 	private function getHtmlPurifierConfig(): HTMLPurifier_Config
 	{
-		$config = HTMLPurifier_HTML5Config::createDefault();
-		$config->autoFinalize = false;
-
-		$config->set('Attr.EnableID', true);
-
-		$allowedSchemes = array_merge($config->get('URI.AllowedSchemes'), [ 'data' => true ]);
-		$config->set('URI.AllowedSchemes', $allowedSchemes);
-
-		$config->set('HTML.Allowed', 'a[href|target]');
-		$config->set('Attr.AllowedFrameTargets', [ '_blank' ]);
-
-		$config->finalize();
-
+		$config = HTMLPurifier_Config::createDefault();
+		$config->set('HTML.Allowed', 'h1,h2,h3,h4,h5,h6,p,br,hr,ul,ol,li,a[href|target],strong,em,b,i,u,s,code,pre,blockquote,img[src|alt|title|width|height],table,thead,tbody,tr,th,td,dl,dt,dd,span,div');
+		$config->set('Attr.AllowedFrameTargets', ['_blank']);
+		$config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'data' => true]);
+		$config->set('Cache.DefinitionImpl', null);
 		return $config;
 	}
 
@@ -278,23 +262,23 @@ class Pico extends \Pico
 	 * @throws WebsiteInvalidFilesystemException
 	 * @throws InvalidPathException
 	 */
-	public function getFiles($absolutePath, $fileExtension = '', $order = \Pico::SORT_ASC)
+	public function getFiles($absolutePath, $fileExtension = '', $order = self::SORT_ASC): array
 	{
 		/** @var FolderInterface $folder */
 		/** @var string $basePath */
 		/** @var string $relativePath */
-		[ $folder, $basePath, $relativePath ] = $this->picoService->getRelativePath($this->website, $absolutePath);
+		[$folder, $basePath, $relativePath] = $this->picoService->getRelativePath($this->website, $absolutePath);
 
 		if ($folder->isLocal()) {
 			return parent::getFiles($absolutePath, $fileExtension, $order);
 		}
 
-		$folderFilter = function (NodeInterface $node, int $key, FolderInterface $folder) use ($fileExtension) {
+		$folderFilter = function (NodeInterface $node, int $key, FolderInterface $folder) use ($fileExtension): bool {
 			$fileName = $node->getName();
 
 			// exclude hidden files/dirs starting with a .
 			// exclude files ending with a ~ (vim/nano backup) or # (emacs backup)
-			if (($fileName[0] === '.') || in_array($fileName[-1], [ '~', '#' ], true)) {
+			if (($fileName[0] === '.') || in_array($fileName[-1], ['~', '#'], true)) {
 				return false;
 			}
 
@@ -316,7 +300,7 @@ class Pico extends \Pico
 				$result[] = $basePath . '/' . $relativePath . $file->getPath();
 			}
 
-			return ($order === \Pico::SORT_DESC) ? array_reverse($result) : $result;
+			return ($order === self::SORT_DESC) ? array_reverse($result) : $result;
 		} catch (\Exception $e) {
 			return [];
 		}
@@ -330,12 +314,12 @@ class Pico extends \Pico
 	 * @throws WebsiteInvalidFilesystemException
 	 * @throws InvalidPathException
 	 */
-	public function getFilesGlob($absolutePathPattern, $order = \Pico::SORT_ASC)
+	public function getFilesGlob($absolutePathPattern, $order = self::SORT_ASC): array
 	{
 		/** @var FolderInterface $folder */
 		/** @var string $basePath */
 		/** @var string $pattern */
-		[ $folder, $basePath, $pattern ] = $this->picoService->getRelativePath($this->website, $absolutePathPattern);
+		[$folder, $basePath, $pattern] = $this->picoService->getRelativePath($this->website, $absolutePathPattern);
 
 		if ($folder->isLocal()) {
 			return parent::getFilesGlob($absolutePathPattern, $order);
@@ -347,14 +331,14 @@ class Pico extends \Pico
 				$fileName = $file->getName();
 
 				// exclude files ending with a ~ (vim/nano backup) or # (emacs backup)
-				if (in_array($fileName[-1], [ '~', '#' ], true)) {
+				if (in_array($fileName[-1], ['~', '#'], true)) {
 					continue;
 				}
 
 				$result[] = $basePath . $file->getPath();
 			}
 
-			return ($order === \Pico::SORT_DESC) ? array_reverse($result) : $result;
+			return ($order === self::SORT_DESC) ? array_reverse($result) : $result;
 		} catch (\Exception $e) {
 			return [];
 		}

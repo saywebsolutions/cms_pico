@@ -29,33 +29,24 @@ use OCA\Files_External\Service\BackendService;
 use OCP\Encryption\IManager as EncryptionManager;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\Server;
 
 class ExternalStorageBackendEventListener implements IEventListener
 {
-	/** @var EncryptionManager */
-	private $encryptionManager;
+	private EncryptionManager $encryptionManager;
 
-	/**
-	 * ExternalStorageBackendEventListener constructor.
-	 *
-	 * @param EncryptionManager $encryptionManager
-	 */
 	public function __construct(EncryptionManager $encryptionManager)
 	{
 		$this->encryptionManager = $encryptionManager;
 	}
 
-	/**
-	 * @inheritDoc
-	 */
 	public function handle(Event $event): void
 	{
 		// OCA\Files_External::loadAdditionalBackends dispatches a GenericEvent, thus we can't check the event type
 		// this event won't ever be dispatched if OCA\Files_External isn't installed and enabled
 
 		if ($this->encryptionManager->isEnabled()) {
-			/** @var BackendService $backendService */
-			$backendService = \OC::$server->query(BackendService::class);
+			$backendService = Server::get(BackendService::class);
 			$backendService->registerBackendProvider(new BackendProvider());
 		}
 	}

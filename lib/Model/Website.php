@@ -36,85 +36,55 @@ use OCA\CMSPico\Files\StorageFolder;
 use OCA\CMSPico\Files\StorageUserFolder;
 use OCA\CMSPico\Service\MiscService;
 use OCA\CMSPico\Service\ThemesService;
-use OCA\CMSPico\Service\WebsitesService;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
+use OCP\Server;
 use function OCA\CMSPico\t;
 
 class Website extends WebsiteCore
 {
-	/** @var int */
 	public const SITE_LENGTH_MIN = 3;
-
-	/** @var int */
 	public const SITE_LENGTH_MAX = 255;
-
-	/** @var string */
 	public const SITE_REGEX = '^[a-z0-9][a-z0-9_-]+[a-z0-9]$';
-
-	/** @var int */
 	public const NAME_LENGTH_MIN = 3;
-
-	/** @var int */
 	public const NAME_LENGTH_MAX = 255;
 
-	/** @var IConfig */
-	private $config;
+	private IConfig $config;
+	private IUserManager $userManager;
+	private IGroupManager $groupManager;
+	private IURLGenerator $urlGenerator;
+	private ThemesService $themesService;
+	private MiscService $miscService;
+	private ?StorageFolder $folder = null;
 
-	/** @var IUserManager */
-	private $userManager;
-
-	/** @var IGroupManager */
-	private $groupManager;
-
-	/** @var IURLGenerator */
-	private $urlGenerator;
-
-	/** @var WebsitesService */
-	private $websitesService;
-
-	/** @var ThemesService */
-	private $themesService;
-
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var StorageFolder */
-	private $folder;
-
-	/**
-	 * Website constructor.
-	 *
-	 * @param array|null $data
-	 */
-	public function __construct($data = null)
-	{
-		$this->config = \OC::$server->getConfig();
-		$this->userManager = \OC::$server->getUserManager();
-		$this->groupManager = \OC::$server->getGroupManager();
-		$this->urlGenerator = \OC::$server->getURLGenerator();
-		$this->websitesService = \OC::$server->query(WebsitesService::class);
-		$this->themesService = \OC::$server->query(ThemesService::class);
-		$this->miscService = \OC::$server->query(MiscService::class);
+	public function __construct(
+		?array $data,
+		IConfig $config,
+		IUserManager $userManager,
+		IGroupManager $groupManager,
+		IURLGenerator $urlGenerator,
+		ThemesService $themesService,
+		MiscService $miscService
+	) {
+		$this->config = $config;
+		$this->userManager = $userManager;
+		$this->groupManager = $groupManager;
+		$this->urlGenerator = $urlGenerator;
+		$this->themesService = $themesService;
+		$this->miscService = $miscService;
 
 		parent::__construct($data);
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getOptionsJSON(): string
 	{
 		return json_encode($this->getOptions());
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getTimeZone(): string
 	{
 		$serverTimeZone = date_default_timezone_get() ?: 'UTC';
@@ -123,7 +93,6 @@ class Website extends WebsiteCore
 
 	/**
 	 * @param string[] $groupAccess
-	 *
 	 * @return $this
 	 */
 	public function setGroupAccess(array $groupAccess): self
@@ -168,7 +137,9 @@ class Website extends WebsiteCore
 		if (!$user->isEnabled()) {
 			throw new WebsiteInvalidOwnerException($this->getSite());
 		}
-		if (!$this->websitesService->isUserAllowed($this->getUserId())) {
+		// Lazy load WebsitesService to avoid circular dependency
+		$websitesService = Server::get(\OCA\CMSPico\Service\WebsitesService::class);
+		if (!$websitesService->isUserAllowed($this->getUserId())) {
 			throw new WebsiteInvalidOwnerException($this->getSite());
 		}
 	}
@@ -240,7 +211,7 @@ class Website extends WebsiteCore
 					throw new WebsiteInvalidDataException($this->getSite(), 'path', $error);
 				}
 			}
-		} catch (InvalidPathException | NotFoundException $e) {
+		} catch (InvalidPathException|NotFoundException $e) {
 			$error = t('Parent folder of the website\'s path not found.');
 			throw new WebsiteInvalidDataException($this->getSite(), 'path', $error);
 		}
@@ -257,7 +228,6 @@ class Website extends WebsiteCore
 
 	/**
 	 * @param string $userId
-	 *
 	 * @throws WebsiteForeignOwnerException
 	 */
 	public function assertOwnedBy(string $userId): void
@@ -276,9 +246,6 @@ class Website extends WebsiteCore
 		if ($this->folder !== null) {
 			try {
 				// NC doesn't guarantee that mounts are present for the whole request lifetime
-				// for example, if you call \OC\Files\Utils\Scanner::scan(), all mounts are reset
-				// this makes OCNode instances, which rely on mounts of different users than the current, unusable
-				// by calling OCFolder::get('') we can detect this situation and re-init the required mounts
 				$this->folder->get('');
 			} catch (\Exception $e) {
 				$this->folder = null;
@@ -291,7 +258,7 @@ class Website extends WebsiteCore
 
 				$websiteFolder = $userFolder->getFolder($this->getPath());
 				$this->folder = $websiteFolder->fakeRoot();
-			} catch (InvalidPathException | NotFoundException $e) {
+			} catch (InvalidPathException|NotFoundException $e) {
 				throw new WebsiteInvalidFilesystemException($this->getSite(), $e);
 			}
 		}
@@ -307,21 +274,16 @@ class Website extends WebsiteCore
 	{
 		try {
 			return $this->getWebsiteFolder()->getLocalPath() . '/';
-		} catch (InvalidPathException | NotFoundException $e) {
+		} catch (InvalidPathException|NotFoundException $e) {
 			throw new WebsiteInvalidFilesystemException($this->getSite(), $e);
 		}
 	}
 
-	/**
-	 * @param bool $proxyRequest
-	 *
-	 * @return string
-	 */
 	public function getWebsiteUrl(bool $proxyRequest = false): string
 	{
 		if (!$proxyRequest) {
 			$route = Application::APP_NAME . '.Pico.getPage';
-			$parameters = [ 'site' => $this->getSite(), 'page' => '' ];
+			$parameters = ['site' => $this->getSite(), 'page' => ''];
 			return $this->urlGenerator->linkToRoute($route, $parameters) . '/';
 		} else {
 			return \OC::$WEBROOT . '/sites/' . urlencode($this->getSite()) . '/';

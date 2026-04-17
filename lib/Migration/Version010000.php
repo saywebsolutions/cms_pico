@@ -30,18 +30,15 @@ use OCA\CMSPico\Service\MiscService;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
+use OCP\Server;
 
 class Version010000 extends SimpleMigrationStep
 {
-	/** @var MiscService */
-	private $miscService;
+	private MiscService $miscService;
 
-	/**
-	 * Version010000 constructor.
-	 */
 	public function __construct()
 	{
-		$this->miscService = \OC::$server->query(MiscService::class);
+		$this->miscService = Server::get(MiscService::class);
 	}
 
 	/**

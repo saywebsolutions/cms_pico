@@ -31,36 +31,29 @@ use OCA\CMSPico\Files\FolderInterface;
 use OCA\CMSPico\Files\LocalFolder;
 use OCA\CMSPico\Model\DummyPluginFile;
 use OCA\CMSPico\Model\Plugin;
+use OCA\CMSPico\Model\PluginFactory;
 use OCP\Files\AlreadyExistsException;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 
 class PluginsService
 {
-	/** @var ConfigService */
-	private $configService;
+	private ConfigService $configService;
+	private FileService $fileService;
+	private MiscService $miscService;
+	private PluginFactory $pluginFactory;
+	private bool $renewedETag = false;
 
-	/** @var FileService */
-	private $fileService;
-
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var bool */
-	private $renewedETag = false;
-
-	/**
-	 * PluginsService constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param FileService   $fileService
-	 * @param MiscService   $miscService
-	 */
-	public function __construct(ConfigService $configService, FileService $fileService, MiscService $miscService)
-	{
+	public function __construct(
+		ConfigService $configService,
+		FileService $fileService,
+		MiscService $miscService,
+		PluginFactory $pluginFactory
+	) {
 		$this->configService = $configService;
 		$this->fileService = $fileService;
 		$this->miscService = $miscService;
+		$this->pluginFactory = $pluginFactory;
 	}
 
 	/**
@@ -196,7 +189,7 @@ class PluginsService
 
 		/** @var LocalFolder $pluginFolder */
 		$pluginFolder = $pluginSourceFolder->copy($publicPluginsFolder);
-		return new Plugin($pluginFolder, $pluginType);
+		return $this->pluginFactory->create($pluginFolder, $pluginType);
 	}
 
 	/**

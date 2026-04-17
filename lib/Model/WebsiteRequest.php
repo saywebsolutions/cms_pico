@@ -31,30 +31,23 @@ use OCA\CMSPico\Files\StorageFolder;
 use OCA\CMSPico\Service\MiscService;
 use OCP\Files\Folder as OCFolder;
 use OCP\Files\InvalidPathException;
+use OCP\Files\IRootFolder;
 use OCP\Files\Node as OCNode;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
+use OCP\IUserSession;
+use OCP\Server;
 
 class WebsiteRequest
 {
-	/** @var Website */
-	private $website;
-
-	/** @var string|null */
-	private $viewer;
-
-	/** @var string */
-	private $page;
-
-	/** @var bool */
-	private $proxyRequest;
-
-	/** @var IGroupManager */
-	private $groupManager;
-
-	/** @var MiscService */
-	private $miscService;
+	private Website $website;
+	private ?string $viewer;
+	private string $page;
+	private bool $proxyRequest;
+	private IGroupManager $groupManager;
+	private MiscService $miscService;
+	private IRootFolder $rootFolder;
 
 	/**
 	 * WebsiteRequest constructor.
@@ -64,10 +57,11 @@ class WebsiteRequest
 	 * @param string      $page
 	 * @param bool        $proxyRequest
 	 */
-	public function __construct(Website $website, string $viewer = null, string $page = '', bool $proxyRequest = false)
+	public function __construct(Website $website, ?string $viewer = null, string $page = '', bool $proxyRequest = false)
 	{
-		$this->groupManager = \OC::$server->getGroupManager();
-		$this->miscService = \OC::$server->query(MiscService::class);
+		$this->groupManager = Server::get(IGroupManager::class);
+		$this->miscService = Server::get(MiscService::class);
+		$this->rootFolder = Server::get(IRootFolder::class);
 
 		$this->website = $website;
 		$this->viewer = $viewer;
@@ -75,7 +69,7 @@ class WebsiteRequest
 		$this->proxyRequest = $proxyRequest;
 
 		if ($this->viewer === null) {
-			$userSession = \OC::$server->getUserSession();
+			$userSession = Server::get(IUserSession::class);
 			$this->viewer = $userSession->isLoggedIn() ? $userSession->getUser()->getUID() : null;
 		}
 	}
@@ -133,7 +127,7 @@ class WebsiteRequest
 			}
 
 			/** @var OCFolder $viewerOCFolder */
-			$viewerOCFolder = \OC::$server->getUserFolder($this->getViewer());
+			$viewerOCFolder = $this->rootFolder->getUserFolder($this->getViewer());
 			$viewerAccessClosure = function (OCNode $node) use ($viewerOCFolder) {
 				$nodeId = $node->getId();
 
@@ -185,33 +179,21 @@ class WebsiteRequest
 		throw new NotPermittedException();
 	}
 
-	/**
-	 * @return Website
-	 */
 	public function getWebsite(): Website
 	{
 		return $this->website;
 	}
 
-	/**
-	 * @return string|null
-	 */
 	public function getViewer(): ?string
 	{
 		return $this->viewer;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getPage(): string
 	{
 		return $this->page;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isProxyRequest(): bool
 	{
 		return $this->proxyRequest;

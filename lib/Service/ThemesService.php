@@ -32,35 +32,28 @@ use OCA\CMSPico\Exceptions\ThemeNotFoundException;
 use OCA\CMSPico\Files\FolderInterface;
 use OCA\CMSPico\Files\LocalFolder;
 use OCA\CMSPico\Model\Theme;
+use OCA\CMSPico\Model\ThemeFactory;
 use OCP\Files\AlreadyExistsException;
 use OCP\Files\NotFoundException;
 
 class ThemesService
 {
-	/** @var ConfigService */
-	private $configService;
+	private ConfigService $configService;
+	private FileService $fileService;
+	private MiscService $miscService;
+	private ThemeFactory $themeFactory;
+	private bool $renewedETag = false;
 
-	/** @var FileService */
-	private $fileService;
-
-	/** @var MiscService */
-	private $miscService;
-
-	/** @var bool */
-	private $renewedETag = false;
-
-	/**
-	 * ThemesService constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param FileService   $fileService
-	 * @param MiscService   $miscService
-	 */
-	public function __construct(ConfigService $configService, FileService $fileService, MiscService $miscService)
-	{
+	public function __construct(
+		ConfigService $configService,
+		FileService $fileService,
+		MiscService $miscService,
+		ThemeFactory $themeFactory
+	) {
 		$this->configService = $configService;
 		$this->fileService = $fileService;
 		$this->miscService = $miscService;
+		$this->themeFactory = $themeFactory;
 	}
 
 	/**
@@ -219,7 +212,7 @@ class ThemesService
 
 		/** @var LocalFolder $themeFolder */
 		$themeFolder = $themeSourceFolder->copy($publicThemesFolder);
-		return new Theme($themeFolder, $themeType);
+		return $this->themeFactory->create($themeFolder, $themeType);
 	}
 
 	/**

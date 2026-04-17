@@ -2,7 +2,6 @@
 /**
  * CMS Pico - Create websites using Pico CMS for Nextcloud.
  *
- * @copyright Copyright (c) 2017, Maxence Lange (<maxence@artificial-owl.com>)
  * @copyright Copyright (c) 2019, Daniel Rudolf (<picocms.org@daniel-rudolf.de>)
  *
  * @license GNU AGPL version 3 or any later version
@@ -21,14 +20,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use OCA\CMSPico\AppInfo\Application;
+declare(strict_types=1);
 
-if (is_file(__DIR__ . '/../vendor/autoload.php')) {
-	require_once(__DIR__ . '/../vendor/autoload.php');
+namespace OCA\CMSPico\Model;
+
+use OCA\CMSPico\Files\FolderInterface;
+use OCA\CMSPico\Service\MiscService;
+
+class PluginFactory
+{
+	private MiscService $miscService;
+
+	public function __construct(MiscService $miscService)
+	{
+		$this->miscService = $miscService;
+	}
+
+	/**
+	 * Create a new Plugin instance.
+	 *
+	 * @param FolderInterface $folder
+	 * @param int $type
+	 * @return Plugin
+	 */
+	public function create(FolderInterface $folder, int $type = Plugin::TYPE_SYSTEM): Plugin
+	{
+		return new Plugin($folder, $type, $this->miscService);
+	}
 }
-
-require_once(__DIR__ . '/../lib/functions.php');
-
-/** @var Application $app */
-$app = \OC::$server->query(Application::class);
-$app->registerEventListener();

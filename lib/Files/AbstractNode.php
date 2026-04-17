@@ -28,24 +28,21 @@ use OCA\CMSPico\Service\MiscService;
 use OCP\Constants;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotPermittedException;
+use OCP\Server;
 
 abstract class AbstractNode implements NodeInterface
 {
-	/** @var MiscService */
-	protected $miscService;
+	protected MiscService $miscService;
 
-	/**
-	 * AbstractNode constructor.
-	 */
 	public function __construct()
 	{
-		$this->miscService = \OC::$server->query(MiscService::class);
+		$this->miscService = Server::get(MiscService::class);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function copy(FolderInterface $targetPath, string $name = null): NodeInterface
+	public function copy(FolderInterface $targetPath, ?string $name = null): NodeInterface
 	{
 		if ($name !== null) {
 			$this->assertValidFileName($name);
@@ -69,7 +66,7 @@ abstract class AbstractNode implements NodeInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function move(FolderInterface $targetPath, string $name = null): NodeInterface
+	public function move(FolderInterface $targetPath, ?string $name = null): NodeInterface
 	{
 		if ($name !== null) {
 			$this->assertValidFileName($name);
@@ -160,13 +157,11 @@ abstract class AbstractNode implements NodeInterface
 	}
 
 	/**
-	 * @param string $name
-	 *
 	 * @throws InvalidPathException
 	 */
 	protected function assertValidFileName(string $name): void
 	{
-		if (in_array($name, [ '', '.', '..' ], true)) {
+		if (in_array($name, ['', '.', '..'], true)) {
 			throw new InvalidPathException();
 		}
 		if ((strpos($name, '/') !== false) || (strpos($name, '\\') !== false)) {
@@ -175,9 +170,6 @@ abstract class AbstractNode implements NodeInterface
 	}
 
 	/**
-	 * @param string $path
-	 *
-	 * @return string
 	 * @throws InvalidPathException
 	 */
 	protected function normalizePath(string $path): string

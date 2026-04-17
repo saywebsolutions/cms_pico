@@ -27,30 +27,23 @@ namespace OCA\CMSPico\Db;
 
 use OCA\CMSPico\Exceptions\WebsiteNotFoundException;
 use OCA\CMSPico\Model\Website;
+use OCA\CMSPico\Model\WebsiteFactory;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 class WebsitesRequest
 {
-	/** @var string */
 	public const TABLE_NAME = 'cms_pico_websites';
 
-	/** @var IDBConnection */
-	protected $dbConnection;
+	protected IDBConnection $dbConnection;
+	protected WebsiteFactory $websiteFactory;
 
-	/**
-	 * CoreRequestBuilder constructor.
-	 *
-	 * @param IDBConnection $connection
-	 */
-	public function __construct(IDBConnection $connection)
+	public function __construct(IDBConnection $connection, WebsiteFactory $websiteFactory)
 	{
 		$this->dbConnection = $connection;
+		$this->websiteFactory = $websiteFactory;
 	}
 
-	/**
-	 * @param Website $website
-	 */
 	public function create(Website $website): void
 	{
 		$qb = $this->dbConnection->getQueryBuilder()
@@ -66,14 +59,11 @@ class WebsitesRequest
 			->setValue('path', $qb->createNamedParameter($website->getPath()))
 			->setValue('creation', $qb->createFunction('NOW()'));
 
-		$qb->execute();
+		$qb->executeStatement();
 
 		$website->setId($qb->getLastInsertId());
 	}
 
-	/**
-	 * @param Website $website
-	 */
 	public function update(Website $website): void
 	{
 		$qb = $this->dbConnection->getQueryBuilder()
@@ -90,12 +80,9 @@ class WebsitesRequest
 
 		$this->limitToField($qb, 'id', $website->getId());
 
-		$qb->execute();
+		$qb->executeStatement();
 	}
 
-	/**
-	 * @param Website $website
-	 */
 	public function delete(Website $website): void
 	{
 		$qb = $this->dbConnection->getQueryBuilder()
@@ -103,12 +90,9 @@ class WebsitesRequest
 
 		$this->limitToField($qb, 'id', $website->getId());
 
-		$qb->execute();
+		$qb->executeStatement();
 	}
 
-	/**
-	 * @param string $userId
-	 */
 	public function deleteAllFromUserId(string $userId): void
 	{
 		$qb = $this->dbConnection->getQueryBuilder()
@@ -116,7 +100,7 @@ class WebsitesRequest
 
 		$this->limitToField($qb, 'user_id', $userId);
 
-		$qb->execute();
+		$qb->executeStatement();
 	}
 
 	/**
@@ -129,18 +113,16 @@ class WebsitesRequest
 			->from(WebsitesRequest::TABLE_NAME);
 
 		$websites = [];
-		$cursor = $qb->execute();
-		while ($data = $cursor->fetch()) {
+		$result = $qb->executeQuery();
+		while ($data = $result->fetch()) {
 			$websites[] = $this->createInstance($data);
 		}
-		$cursor->closeCursor();
+		$result->closeCursor();
 
 		return $websites;
 	}
 
 	/**
-	 * @param string $userId
-	 *
 	 * @return Website[]
 	 */
 	public function getWebsitesFromUserId(string $userId): array
@@ -152,19 +134,16 @@ class WebsitesRequest
 		$this->limitToField($qb, 'user_id', $userId);
 
 		$websites = [];
-		$cursor = $qb->execute();
-		while ($data = $cursor->fetch()) {
+		$result = $qb->executeQuery();
+		while ($data = $result->fetch()) {
 			$websites[] = $this->createInstance($data);
 		}
-		$cursor->closeCursor();
+		$result->closeCursor();
 
 		return $websites;
 	}
 
 	/**
-	 * @param int $siteId
-	 *
-	 * @return Website
 	 * @throws WebsiteNotFoundException
 	 */
 	public function getWebsiteFromId(int $id): Website
@@ -175,9 +154,9 @@ class WebsitesRequest
 
 		$this->limitToField($qb, 'id', $id);
 
-		$cursor = $qb->execute();
-		$data = $cursor->fetch();
-		$cursor->closeCursor();
+		$result = $qb->executeQuery();
+		$data = $result->fetch();
+		$result->closeCursor();
 
 		if ($data === false) {
 			throw new WebsiteNotFoundException('#' . $id);
@@ -187,9 +166,6 @@ class WebsitesRequest
 	}
 
 	/**
-	 * @param string $site
-	 *
-	 * @return Website
 	 * @throws WebsiteNotFoundException
 	 */
 	public function getWebsiteFromSite(string $site): Website
@@ -200,9 +176,9 @@ class WebsitesRequest
 
 		$this->limitToField($qb, 'site', $site);
 
-		$cursor = $qb->execute();
-		$data = $cursor->fetch();
-		$cursor->closeCursor();
+		$result = $qb->executeQuery();
+		$data = $result->fetch();
+		$result->closeCursor();
 
 		if ($data === false) {
 			throw new WebsiteNotFoundException($site);
@@ -211,22 +187,12 @@ class WebsitesRequest
 		return $this->createInstance($data);
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return Website
-	 */
 	private function createInstance(array $data): Website
 	{
-		return new Website($data);
+		return $this->websiteFactory->create($data);
 	}
 
-	/**
-	 * @param IQueryBuilder $qb
-	 * @param string        $field
-	 * @param mixed         $value
-	 */
-	private function limitToField(IQueryBuilder $qb, string $field, $value): void
+	private function limitToField(IQueryBuilder $qb, string $field, mixed $value): void
 	{
 		$qb->andWhere($qb->expr()->eq($field, $qb->createNamedParameter($value)));
 	}
