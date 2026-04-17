@@ -246,10 +246,15 @@ class Pico extends PicoCore
 	private function getHtmlPurifierConfig(): HTMLPurifier_Config
 	{
 		$config = HTMLPurifier_Config::createDefault();
-		$config->set('HTML.Allowed', 'h1,h2,h3,h4,h5,h6,p,br,hr,ul,ol,li,a[href|target],strong,em,b,i,u,s,code,pre,blockquote,img[src|alt|title|width|height],table,thead,tbody,tr,th,td,dl,dt,dd,span,div');
+		$config->set('HTML.Allowed', 'h1,h2,h3,h4,h5,h6,p,br,hr,ul,ol,li,a[href|target|rel],strong,em,b,i,u,s,code,pre,blockquote,img[src|alt|title|width|height],table,thead,tbody,tr,th,td,dl,dt,dd,span,div');
 		$config->set('Attr.AllowedFrameTargets', ['_blank']);
-		$config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'data' => true]);
+		$config->set('Attr.AllowedRel', ['nofollow', 'noopener', 'noreferrer']);
+		// Exclude data: URIs to prevent XSS via SVG images and other vectors
+		$config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
 		$config->set('Cache.DefinitionImpl', null);
+		// Add rel="nofollow noopener" to links with target="_blank" for security
+		$config->set('HTML.TargetBlank', true);
+		$config->set('HTML.Nofollow', true);
 		return $config;
 	}
 

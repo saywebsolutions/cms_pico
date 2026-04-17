@@ -39,7 +39,7 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	protected $inlineScriptAllowed = true;
 
 	/** @var bool Whether eval in JS scripts is allowed */
-	protected $evalScriptAllowed = true;
+	protected $evalScriptAllowed = false;
 
 	/** @var array Domains from which scripts can get loaded */
 	protected $allowedScriptDomains = [
@@ -57,7 +57,6 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	/** @var array Domains from which images can get loaded */
 	protected $allowedImageDomains = [
 		'\'self\'',
-		'data:',
 		'blob:',
 	];
 
@@ -72,9 +71,7 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	];
 
 	/** @var array Domains from which object elements can be loaded */
-	protected $allowedObjectDomains = [
-		'\'self\'',
-	];
+	protected $allowedObjectDomains = [];
 
 	/** @var array Domains from which iframes can be loaded */
 	protected $allowedFrameDomains = [

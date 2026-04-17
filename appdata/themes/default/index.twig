@@ -8,7 +8,7 @@
     <meta name="description" content="{{ meta.description|striptags }}">
     {% endif %}
     {% if meta.robots %}
-    <meta name="robots" content="{{ meta.robots }}">
+    <meta name="robots" content="{{ meta.robots|e('html_attr') }}">
     {% endif %}
     <link rel="stylesheet" href="{{ theme_url }}/style.css">
 </head>
