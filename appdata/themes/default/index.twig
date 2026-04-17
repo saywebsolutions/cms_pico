@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if meta.title %}{{ meta.title }} | {% endif %}{{ site_title }}</title>
+    {% if meta.description %}
+    <meta name="description" content="{{ meta.description|striptags }}">
+    {% endif %}
+    {% if meta.robots %}
+    <meta name="robots" content="{{ meta.robots }}">
+    {% endif %}
+    <link rel="stylesheet" href="{{ theme_url }}/style.css">
+</head>
+<body>
+    <header>
+        <h1><a href="{{ base_url }}">{{ site_title }}</a></h1>
+        <nav>
+            <ul>
+            {% for page in pages|filter(p => not p.hidden) %}
+                <li{% if page.id == current_page.id %} class="active"{% endif %}>
+                    <a href="{{ page.url }}">{{ page.title }}</a>
+                </li>
+            {% endfor %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% if meta.title %}
+        <h1>{{ meta.title }}</h1>
+        {% endif %}
+
+        {{ content }}
+    </main>
+
+    <footer>
+    </footer>
+</body>
+</html>
