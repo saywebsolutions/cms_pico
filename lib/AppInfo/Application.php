@@ -41,8 +41,6 @@ class Application extends App implements IBootstrap
 {
 	public const APP_NAME = 'cms_pico';
 
-	private IAppManager $appManager;
-
 	public function __construct(array $urlParams = [])
 	{
 		parent::__construct(self::APP_NAME, $urlParams);
@@ -72,9 +70,6 @@ class Application extends App implements IBootstrap
 
 		// Load functions and Pico bootstrap
 		require_once __DIR__ . '/../functions.php';
-
-		// Store app manager for static helper methods
-		$this->appManager = $context->getServerContainer()->get(IAppManager::class);
 	}
 
 	/**
