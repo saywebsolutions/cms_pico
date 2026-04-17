@@ -293,7 +293,12 @@ class ThemesService
 
 		$themesETag = $this->configService->getAppValue(ConfigService::THEMES_ETAG);
 		if ($themesETag) {
-			$themesFolder = $themesBaseFolder->getFolder($themesETag);
+			try {
+				$themesFolder = $themesBaseFolder->getFolder($themesETag);
+			} catch (NotFoundException $e) {
+				// ETag folder was deleted externally, will be recreated below
+				$themesFolder = null;
+			}
 		}
 
 		if (($renewETag && !$this->renewedETag) || $forceRenewETag || !$themesFolder) {
