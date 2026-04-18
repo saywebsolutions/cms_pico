@@ -32,6 +32,22 @@
         {% endif %}
 
         {{ content|raw }}
+
+        {% if config.comments_url %}
+        <section id="comments">
+            <h2>Comments</h2>
+            <div id="remark42"></div>
+            <script>
+                var remark_config = {
+                    host: '{{ config.comments_url }}',
+                    site_id: '{{ config.nextcloud_site }}',
+                    url: window.location.pathname,
+                    theme: 'light'
+                };
+            </script>
+            <script defer src="{{ config.comments_url }}/web/embed.js"></script>
+        </section>
+        {% endif %}
     </main>
 
     <footer>

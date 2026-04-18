@@ -149,3 +149,72 @@ By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_
    ```bash
    sudo certbot --nginx -d myblog.com
    ```
+
+## Comments with Remark42 (Advanced)
+
+Add self-hosted comments to your Pico sites using [Remark42](https://remark42.com/).
+
+### Server Setup
+
+1. **Download Remark42**:
+   ```bash
+   wget https://github.com/umputun/remark42/releases/latest/download/remark42.linux-amd64.tar.gz
+   tar xzf remark42.linux-amd64.tar.gz
+   sudo mv remark42.linux-amd64 /usr/local/bin/remark42
+   ```
+
+2. **Create systemd service** (`/etc/systemd/system/remark42.service`):
+   ```ini
+   [Unit]
+   Description=Remark42 Comment Engine
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=www-data
+   Environment="REMARK_URL=https://your-nextcloud.com/comments"
+   Environment="SECRET=CHANGE_THIS_RANDOM_STRING"
+   Environment="SITE=pico"
+   Environment="STORE_BOLT_PATH=/var/www/nextcloud/data/remark42"
+   Environment="AUTH_ANON=true"
+   ExecStart=/usr/local/bin/remark42 server
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. **Create data directory** (backed up with Nextcloud data):
+   ```bash
+   sudo mkdir -p /var/www/nextcloud/data/remark42
+   sudo chown www-data:www-data /var/www/nextcloud/data/remark42
+   ```
+
+4. **Add Apache proxy** (in your Nextcloud vhost):
+   ```apache
+   ProxyPass /comments http://127.0.0.1:8080
+   ProxyPassReverse /comments http://127.0.0.1:8080
+   ```
+
+5. **Start service**:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now remark42
+   ```
+
+### Enable in Pico
+
+Set the comments URL via OCC:
+```bash
+sudo -u www-data php occ config:app:set cms_pico comments_url --value="https://your-nextcloud.com/comments"
+```
+
+Comments will appear on all pages using the default theme.
+
+### Import from Disqus
+
+1. Export from Disqus: Admin > Community > Export
+2. Import to Remark42:
+   ```bash
+   remark42 import --provider=disqus --file=disqus_export.xml --site=pico
+   ```

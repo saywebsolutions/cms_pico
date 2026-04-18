@@ -141,6 +141,16 @@ main blockquote {
     color: #666;
 }
 
+#comments {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+#comments h2 {
+    margin-bottom: 1rem;
+}
+
 footer {
     margin-top: 2rem;
     padding-top: 1rem;

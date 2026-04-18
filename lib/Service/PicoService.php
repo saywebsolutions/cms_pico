@@ -87,6 +87,9 @@ class PicoService
 	/** @var MiscService */
 	private $miscService;
 
+	/** @var ConfigService */
+	private $configService;
+
 	/**
 	 * PicoService constructor.
 	 *
@@ -96,6 +99,7 @@ class PicoService
 	 * @param PluginsService  $pluginsService
 	 * @param FileService     $fileService
 	 * @param MiscService     $miscService
+	 * @param ConfigService   $configService
 	 */
 	public function __construct(
 		LoggerInterface $logger,
@@ -103,7 +107,8 @@ class PicoService
 		ThemesService $themesService,
 		PluginsService $pluginsService,
 		FileService $fileService,
-		MiscService $miscService
+		MiscService $miscService,
+		ConfigService $configService
 	) {
 		$this->logger = $logger;
 		$this->assetsService = $assetsService;
@@ -111,6 +116,7 @@ class PicoService
 		$this->pluginsService = $pluginsService;
 		$this->fileService = $fileService;
 		$this->miscService = $miscService;
+		$this->configService = $configService;
 	}
 
 	/**
@@ -203,6 +209,7 @@ class PicoService
 				'assets_url'     => $this->assetsService->getAssetsUrl($websiteRequest),
 				'plugins_url'    => $this->pluginsService->getPluginsUrl(),
 				'nextcloud_site' => $website->getSite(),
+				'comments_url'   => $this->configService->getAppValue(ConfigService::COMMENTS_URL),
 			]
 		);
 	}

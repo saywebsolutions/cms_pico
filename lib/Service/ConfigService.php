@@ -60,6 +60,9 @@ class ConfigService
 	/** @var string */
 	public const LINK_MODE = 'link_mode';
 
+	/** @var string */
+	public const COMMENTS_URL = 'comments_url';
+
 	/** @var IConfig */
 	protected $config;
 
@@ -86,6 +89,7 @@ class ConfigService
 			self::PLUGINS_ETAG => '',
 			self::LIMIT_GROUPS => '',
 			self::LINK_MODE => (string) WebsitesService::LINK_MODE_LONG,
+			self::COMMENTS_URL => '',
 		];
 	}
 
