@@ -24,10 +24,17 @@ declare(strict_types=1);
 
 namespace OCA\CMSPico\Http;
 
+use OC\Security\CSP\ContentSecurityPolicyNonceManager;
 use OCP\AppFramework\Http\EmptyContentSecurityPolicy;
+use OCP\Server;
 
 class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 {
+	public function __construct()
+	{
+		$this->useJsNonce(Server::get(ContentSecurityPolicyNonceManager::class)->getNonce());
+	}
+
 	/** @var bool Whether inline JS snippets are allowed */
 	protected $inlineScriptAllowed = true;
 
@@ -70,7 +77,9 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	];
 
 	/** @var array Domains from which iframes can be loaded */
-	protected $allowedFrameDomains = [];
+	protected $allowedFrameDomains = [
+		'\'self\'',
+	];
 
 	/** @var array Domains from which fonts can be loaded */
 	protected $allowedFontDomains = [

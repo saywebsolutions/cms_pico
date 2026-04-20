@@ -39,6 +39,7 @@ use OCA\CMSPico\Model\PicoPage;
 use OCA\CMSPico\Model\Website;
 use OCA\CMSPico\Model\WebsiteRequest;
 use OCA\CMSPico\Pico;
+use OC\Security\CSP\ContentSecurityPolicyNonceManager;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
@@ -210,6 +211,7 @@ class PicoService
 				'plugins_url'    => $this->pluginsService->getPluginsUrl(),
 				'nextcloud_site' => $website->getSite(),
 				'comments_url'   => $this->configService->getAppValue(ConfigService::COMMENTS_URL),
+				'csp_nonce'      => Server::get(ContentSecurityPolicyNonceManager::class)->getNonce(),
 			]
 		);
 	}

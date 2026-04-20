@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search | {{ site_title }}</title>
+    <link rel="stylesheet" href="{{ theme_url }}/style.css">
+    <style nonce="{{ config.csp_nonce }}">
+        mark { background: #fff3cd; padding: 0 2px; }
+        #search-input { width: 100%; padding: 0.5rem; font-size: 1rem; margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="{{ base_url }}">{{ site_title }}</a></h1>
+        {% include "partials/nav.twig" %}
+    </header>
+
+    <main>
+        <h1>Search</h1>
+
+        <input type="text" id="search-input" placeholder="Search posts..." autofocus>
+
+        <section id="search-results" class="blog-posts"></section>
+    </main>
+
+    <footer></footer>
+
+    <script nonce="{{ config.csp_nonce }}" src="{{ theme_url }}/lunr.min.js"></script>
+    <script nonce="{{ config.csp_nonce }}">
+        var posts = [
+            {% for page in pages("blog")|sort_by("time")|reverse %}
+            {
+                "id": "{{ page.id }}",
+                "url": "{{ page.url }}",
+                "title": "{{ page.title|e('js') }}",
+                "description": "{{ page.description|e('js') }}",
+                "date": "{{ page.date_formatted }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var idx = lunr(function() {
+            this.ref('id');
+            this.field('title', { boost: 10 });
+            this.field('description');
+
+            posts.forEach(function(post) {
+                this.add(post);
+            }, this);
+        });
+
+        var searchInput = document.getElementById('search-input');
+        var resultsContainer = document.getElementById('search-results');
+
+        function highlight(text, terms) {
+            if (!text || !terms.length) return text;
+            var pattern = new RegExp('(' + terms.join('|') + ')', 'gi');
+            return text.replace(pattern, '<mark>$1</mark>');
+        }
+
+        function doSearch(query) {
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            var results = idx.search(query + '*');
+            var terms = query.toLowerCase().split(/\s+/);
+            var html = '';
+
+            results.forEach(function(result) {
+                var post = posts.find(function(p) { return p.id === result.ref; });
+                if (post) {
+                    html += '<article class="post">';
+                    html += '<h2><a href="' + post.url + '">' + highlight(post.title, terms) + '</a></h2>';
+                    html += '<p class="date">' + post.date + '</p>';
+                    if (post.description) {
+                        html += '<p class="excerpt">' + highlight(post.description, terms) + '</p>';
+                    }
+                    html += '</article>';
+                }
+            });
+
+            resultsContainer.innerHTML = html || '<p>No results found.</p>';
+        }
+
+        searchInput.addEventListener('input', function() {
+            var query = this.value.trim();
+            var url = new URL(window.location);
+            if (query) {
+                url.searchParams.set('q', query);
+            } else {
+                url.searchParams.delete('q');
+            }
+            history.replaceState(null, '', url);
+            doSearch(query);
+        });
+
+        // Load from URL param
+        var params = new URLSearchParams(window.location.search);
+        var q = params.get('q');
+        if (q) {
+            searchInput.value = q;
+            doSearch(q);
+        }
+    </script>
+</body>
+</html>
