@@ -45,7 +45,7 @@
                     theme: 'light'
                 };
             </script>
-            <script defer src="{{ config.comments_url }}/web/embed.js"></script>
+            <script defer nonce="{{ config.csp_nonce }}" src="{{ config.comments_url }}/web/embed.js"></script>
         </section>
         {% endif %}
     </main>
