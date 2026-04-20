@@ -33,8 +33,9 @@
                 var remark_config = {
                     host: '{{ config.comments_url }}',
                     site_id: '{{ config.nextcloud_site }}',
-                    url: window.location.pathname,
-                    theme: 'light'
+                    url: window.location.origin + window.location.pathname,
+                    theme: 'light',
+                    locale: 'sv-SE'
                 };
             </script>
             <script defer nonce="{{ config.csp_nonce }}" src="{{ config.comments_url }}/web/embed.js"></script>
