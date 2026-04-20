@@ -26,6 +26,7 @@ use Twig\Extension\DebugExtension as TwigExtensionDebug;
 use Twig\TwigFilter;
 use Twig\Markup as TwigMarkup;
 use ParsedownExtra;
+use OCA\CMSPico\Pico\SafeParsedownExtra;
 
 class Pico
 {
@@ -1548,7 +1549,7 @@ class Pico
     {
         if ($this->parsedown === null) {
             $contentConfig = $this->config['content_config'] ?? [];
-            $className = !empty($contentConfig['extra']) ? 'ParsedownExtra' : 'Parsedown';
+            $className = !empty($contentConfig['extra']) ? SafeParsedownExtra::class : 'Parsedown';
             $this->parsedown = new $className();
 
             $this->parsedown->setBreaksEnabled((bool) ($contentConfig['breaks'] ?? false));
