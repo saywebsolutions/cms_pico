@@ -77,7 +77,9 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	];
 
 	/** @var array Domains from which iframes can be loaded */
-	protected $allowedFrameDomains = [];
+	protected $allowedFrameDomains = [
+		'\'self\'',
+	];
 
 	/** @var array Domains from which fonts can be loaded */
 	protected $allowedFontDomains = [
