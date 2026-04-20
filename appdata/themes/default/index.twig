@@ -37,7 +37,7 @@
         <section id="comments">
             <h2>Comments</h2>
             <div id="remark42"></div>
-            <script>
+            <script nonce="{{ config.csp_nonce }}">
                 var remark_config = {
                     host: '{{ config.comments_url }}',
                     site_id: '{{ config.nextcloud_site }}',
