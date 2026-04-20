@@ -15,6 +15,7 @@
 **Templates:**
 - `index.twig` - Default page template
 - `blog-index.twig` - Blog listing (used via `template: blog-index` frontmatter)
+- `search.twig` - Lunr.js search (used via `template: search` frontmatter)
 
 ## Deployment
 ```bash
@@ -28,6 +29,29 @@ Theme source: `appdata/themes/` → published to `appdata_public/themes/` by rep
 ## Remark42 Comments
 
 **Server:** do3 (`ssh do3`)
+
+### Initial Setup (already done)
+```bash
+# Download binary
+wget https://github.com/umputun/remark42/releases/latest/download/remark42.linux-amd64.tar.gz -O /tmp/remark42.tar.gz
+tar xzf /tmp/remark42.tar.gz -C /tmp
+sudo mv /tmp/remark42.linux-amd64 /usr/local/bin/remark42
+sudo chmod +x /usr/local/bin/remark42
+
+# Create data dir
+sudo mkdir -p /var/www/nextcloud/data/remark42
+sudo chown www-data:www-data /var/www/nextcloud/data/remark42
+
+# Enable Apache proxy
+sudo a2enmod proxy proxy_http
+sudo a2enconf remark42
+sudo systemctl reload apache2
+
+# Enable systemd service
+sudo systemctl daemon-reload
+sudo systemctl enable remark42
+sudo systemctl start remark42
+```
 
 **Paths:**
 - Binary: `/usr/local/bin/remark42`
