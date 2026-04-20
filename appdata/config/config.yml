@@ -1,0 +1,4 @@
+##
+# Date format: YYYY-MM-DD HH:MM TZ
+#
+date_format: "%Y-%m-%d %H:%M %Z"

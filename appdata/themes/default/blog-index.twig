@@ -19,27 +19,19 @@
     </header>
 
     <main>
-        {% if meta.title %}
         <h1>{{ meta.title }}</h1>
-        {% endif %}
 
-        {{ content|raw }}
-
-        {% if config.comments_url %}
-        <section id="comments">
-            <h2>Comments</h2>
-            <div id="remark42"></div>
-            <script nonce="{{ config.csp_nonce }}">
-                var remark_config = {
-                    host: '{{ config.comments_url }}',
-                    site_id: '{{ config.nextcloud_site }}',
-                    url: window.location.pathname,
-                    theme: 'light'
-                };
-            </script>
-            <script defer nonce="{{ config.csp_nonce }}" src="{{ config.comments_url }}/web/embed.js"></script>
+        <section class="blog-posts">
+        {% for page in pages("blog")|sort_by("time")|reverse %}
+            <article class="post">
+                <h2><a href="{{ page.url }}">{{ page.title }}</a></h2>
+                <p class="date">{{ page.date_formatted }}</p>
+                {% if page.description %}
+                <p class="excerpt">{{ page.description }}</p>
+                {% endif %}
+            </article>
+        {% endfor %}
         </section>
-        {% endif %}
     </main>
 
     <footer>
