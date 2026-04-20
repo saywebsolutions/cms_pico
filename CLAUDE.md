@@ -1,5 +1,8 @@
 # CMS Pico for Nextcloud
 
+## NO AI ATTRIBUTION
+NEVER add Claude/AI attribution to commits, PRs, PR descriptions, or code.
+
 ## Blog Content
 
 **Local path:** `/home/user/Nextcloud/CMS/web/`
