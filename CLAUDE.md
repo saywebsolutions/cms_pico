@@ -72,7 +72,12 @@ sudo -u www-data php /var/www/nextcloud/occ config:app:set cms_pico comments_url
 [Service]
 Environment=REMARK_URL=https://nc.saywebsolutions.com/comments
 Environment=SITE=web
+Environment=STORE_BOLT_PATH=/var/www/nextcloud/data/remark42
+Environment=BACKUP_PATH=/var/www/nextcloud/data/remark42/backup
 Environment=AUTH_ANON=true
+Environment=AUTH_EMAIL_ENABLE=true
+Environment="AUTH_EMAIL_FROM=Remark42 <remark42@saywebsolutions.com>"
+Environment=ADMIN_PASSWD=[admin password for imports]
 Environment=ADMIN_SHARED_EMAIL=kyle@saywebsolutions.com
 Environment=NOTIFY_ADMINS=email
 Environment="NOTIFY_EMAIL_FROM=Remark42 <remark42@saywebsolutions.com>"
@@ -84,3 +89,29 @@ Environment=SMTP_PASSWORD=[zoho app password]
 ```
 
 **Restart:** `sudo systemctl daemon-reload && sudo systemctl restart remark42`
+
+### Disqus Import
+
+1. Export from Disqus admin (XML file emailed to you)
+2. Create URL map (old URLs → new Pico URLs):
+```bash
+zcat export.xml.gz | grep -oP '<link>https://oldsite\.com/blog/[^<]+</link>' | \
+  sed 's/<\/*link>//g' | while read url; do
+  slug=$(echo "$url" | sed 's/?.*//' | sed 's|.*/blog/||')
+  echo "$url https://nc.saywebsolutions.com/apps/cms_pico/pico/web/blog/${slug}"
+done | sort -u > url_map.txt
+```
+3. Replace URLs in XML:
+```bash
+while read old new; do
+  sed -i "s|$old|$new|g" export.xml
+done < url_map.txt
+```
+4. Import:
+```bash
+REMARK_URL=https://nc.saywebsolutions.com/comments \
+SECRET=[secret from service file] \
+STORE_BOLT_PATH=/var/www/nextcloud/data/remark42 \
+ADMIN_PASSWD=[admin password] \
+remark42 import -p disqus -f export.xml -s web
+```
