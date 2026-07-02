@@ -23,6 +23,18 @@
         <h1>{{ meta.title }}</h1>
         {% endif %}
 
+        {% if meta.tags %}
+        <p class="tags">
+            {% for tag in meta.tags %}
+            {% set tagPage = null %}
+            {% for tp in pages("blog/tags") %}
+                {% if tp.meta.tag|lower == tag|lower %}{% set tagPage = tp %}{% endif %}
+            {% endfor %}
+            {% if tagPage %}<a class="tag" href="{{ tagPage.url }}">{{ tag }}</a>{% else %}<span class="tag">{{ tag }}</span>{% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+
         {{ content|raw }}
 
         {% if config.comments_url %}

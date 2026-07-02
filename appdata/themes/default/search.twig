@@ -29,7 +29,7 @@
     <script nonce="{{ config.csp_nonce }}" src="{{ theme_url }}/lunr.min.js"></script>
     <script nonce="{{ config.csp_nonce }}">
         var posts = [
-            {% for page in pages("blog")|sort_by("time")|reverse %}
+            {% for page in pages("blog")|sort_by("time")|reverse|filter(p => p.meta.date) %}
             {
                 "id": "{{ page.id }}",
                 "url": "{{ page.url }}",

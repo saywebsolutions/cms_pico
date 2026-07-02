@@ -77,6 +77,41 @@ Due to how Nextcloud and most other PHP applications handle dependencies, there'
 
 In the meantime you must remove all conflicting apps. Known conflicting apps are [Issue Template](https://apps.nextcloud.com/apps/issuetemplate) and [Terms of service](https://apps.nextcloud.com/apps/terms_of_service). If you see the error `"Call to undefined method ParsedownExtra::textElements()"` in Nextcloud's log even though you\'ve removed all conflicting apps, please don't hesitate to [open a new Issue on GitHub](https://github.com/saywebsolutions/cms_pico/issues/new) with a copy of the error including its stack trace and a complete list of all apps installed.
 
+## Roadmap
+
+This fork serves two goals: a polished personal blogging platform on Nextcloud first, and a maintained public fork second. Items are roughly ordered; nothing here is a promise.
+
+### Phase 1 — Blogging essentials
+
+- [ ] **RSS/Atom feed** — generate a feed from blog posts (template-driven, like `blog-index`)
+- [ ] **SEO meta** — OpenGraph/Twitter card tags, canonical URLs, meta descriptions from front matter
+- [ ] **Sitemap.xml** — auto-generated from published pages
+- [x] **Tags/categories** — front matter tags, tag archive pages (`blog-tag`/`blog-tags` templates), tag links on posts
+- [ ] **Pagination** — paginate the blog index beyond N posts
+- [ ] **Drafts & scheduling** — hide `draft: true` and future-dated posts from index and search
+
+### Phase 2 — Theme & content polish
+
+- [ ] **Dark mode** — `prefers-color-scheme` support in the default theme
+- [ ] **Responsive images** — sensible defaults for image sizing, lazy loading
+- [ ] **Comment counts** — show Remark42 comment counts on the blog index
+- [ ] **Search improvements** — pre-built lunr index instead of client-side build on every page load
+- [ ] **Code highlighting** — syntax highlighting for fenced code blocks
+
+### Phase 3 — Maintenance & workflow
+
+- [ ] **Automated deploy** — replace the manual rsync flow with a script or GitHub Action
+- [ ] **Dependency refresh** — keep HTMLPurifier, Parsedown/ParsedownExtra, and Twig current; evaluate maintained Parsedown alternatives
+- [ ] **CI** — GitHub Actions: lint, static analysis, PHPUnit across supported PHP/Nextcloud versions
+- [ ] **Test coverage** — integration tests for the theme, blog index, search, and CSP/purifier hardening
+
+### Phase 4 — Public release
+
+- [ ] **Docs** — theme development guide, upgrade guide from upstream 1.x
+- [ ] **2.0.0 stable** — finalize the `2.0.0-beta.1` line with a proper changelog
+- [ ] **Distribution** — publish releases (GitHub releases with prebuilt tarball; evaluate App Store listing vs. coordinating with upstream)
+- [ ] **Nextcloud version tracking** — keep pace with new major Nextcloud releases
+
 ## Getting help
 
 Something went wrong? You need help? No worries, we will help!

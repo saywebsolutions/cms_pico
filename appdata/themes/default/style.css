@@ -194,3 +194,41 @@ footer a {
     color: #555;
     margin: 0;
 }
+
+/* Tags */
+.tags {
+    margin: 0.25rem 0 1rem 0;
+}
+
+.tag {
+    display: inline-block;
+    background: #f0f0f0;
+    color: #555;
+    border-radius: 3px;
+    padding: 0.1rem 0.5rem;
+    margin: 0 0.25rem 0.25rem 0;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+a.tag:hover {
+    background: #0066cc;
+    color: #fff;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+}
+
+.tag-cloud .tag-sm { font-size: 0.8rem; }
+.tag-cloud .tag-md { font-size: 0.95rem; }
+.tag-cloud .tag-lg { font-size: 1.15rem; }
+.tag-cloud .tag-xl { font-size: 1.4rem; }
+
+.tag-page-nav {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
