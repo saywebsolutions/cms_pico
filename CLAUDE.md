@@ -29,6 +29,21 @@ ssh do3 "sudo -u www-data php /var/www/nextcloud/occ maintenance:repair"
 
 Theme source: `appdata/themes/` → published to `appdata_public/themes/` by repair step.
 
+## Custom Domain (saywebsolutions.com)
+
+**App setting:** `occ config:app:set cms_pico custom_domains --value='{"saywebsolutions.com": "web"}'` — app generates domain-root URLs for requests via the `pico_proxy` routes.
+
+**Vhost:** `/etc/apache2/sites-available/saywebsolutions.com.conf` on do3 — dumb reverse proxy to `pico_proxy` routes (no body rewriting) + transparent mappings so the old URL structure serves unchanged, zero redirects (`/images/*` → assets images, `/blog/tags/.ppk` → ppk tag page). All 469 old site URLs verified through it.
+
+**Test without DNS:** `curl --resolve saywebsolutions.com:80:161.35.234.38 http://saywebsolutions.com/<path>`
+
+**Cutover checklist (remaining):**
+1. Rename website in Pico personal settings: "Blog" → "Say Web Solutions" (site_title)
+2. Point DNS A record for saywebsolutions.com (+www) to 161.35.234.38
+3. `sudo certbot --apache -d saywebsolutions.com -d www.saywebsolutions.com` (adds :443 vhost — re-add proxy/substitute/redirect directives to the SSL vhost if certbot doesn't copy them)
+4. Remap Remark42 comment URLs (page URLs change from `https://nc.saywebsolutions.com/apps/cms_pico/pico/web/blog/<slug>` to `https://saywebsolutions.com/blog/<slug>`): `remark42 remap` with a URL map file, same env as import
+5. Consider canonical `<link>` tags in theme (site now reachable via both hosts)
+
 ## Remark42 Comments
 
 **Server:** do3 (`ssh do3`)

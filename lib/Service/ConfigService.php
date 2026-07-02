@@ -63,6 +63,9 @@ class ConfigService
 	/** @var string */
 	public const COMMENTS_URL = 'comments_url';
 
+	/** @var string JSON object mapping domains to website names, e.g. {"example.com": "my_site"} */
+	public const CUSTOM_DOMAINS = 'custom_domains';
+
 	/** @var IConfig */
 	protected $config;
 
@@ -90,7 +93,50 @@ class ConfigService
 			self::LIMIT_GROUPS => '',
 			self::LINK_MODE => (string) WebsitesService::LINK_MODE_LONG,
 			self::COMMENTS_URL => '',
+			self::CUSTOM_DOMAINS => '',
 		];
+	}
+
+	/**
+	 * Returns the configured custom domains as a domain => site map.
+	 *
+	 * Invalid entries are silently dropped.
+	 *
+	 * @return array<string,string>
+	 */
+	public function getCustomDomains(): array
+	{
+		$json = $this->getAppValue(self::CUSTOM_DOMAINS);
+		if (!$json) {
+			return [];
+		}
+
+		$domains = json_decode($json, true);
+		if (!is_array($domains)) {
+			return [];
+		}
+
+		$result = [];
+		foreach ($domains as $domain => $site) {
+			if (is_string($domain) && is_string($site) && preg_match('/^[a-z0-9.-]+$/', $domain)) {
+				$result[$domain] = $site;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Returns the custom domain of a website, or null if none is configured.
+	 *
+	 * @param string $site
+	 *
+	 * @return string|null
+	 */
+	public function getCustomDomain(string $site): ?string
+	{
+		$domain = array_search($site, $this->getCustomDomains(), true);
+		return ($domain !== false) ? $domain : null;
 	}
 
 	/**

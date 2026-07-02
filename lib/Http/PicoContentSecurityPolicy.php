@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\CMSPico\Http;
 
 use OC\Security\CSP\ContentSecurityPolicyNonceManager;
+use OCA\CMSPico\Service\ConfigService;
 use OCP\AppFramework\Http\EmptyContentSecurityPolicy;
 use OCP\Server;
 
@@ -33,6 +34,31 @@ class PicoContentSecurityPolicy extends EmptyContentSecurityPolicy
 	public function __construct()
 	{
 		$this->useJsNonce(Server::get(ContentSecurityPolicyNonceManager::class)->getNonce());
+
+		// when the comments service lives on another origin (e.g. websites served
+		// through a custom domain), its embed script, iframe and XHR calls are no
+		// longer covered by 'self'
+		$commentsUrl = Server::get(ConfigService::class)->getAppValue(ConfigService::COMMENTS_URL);
+		if ($commentsUrl) {
+			$origin = $this->getUrlOrigin($commentsUrl);
+			if ($origin) {
+				$this->addAllowedScriptDomain($origin);
+				$this->addAllowedConnectDomain($origin);
+				$this->addAllowedFrameDomain($origin);
+			}
+		}
+	}
+
+	private function getUrlOrigin(string $url): ?string
+	{
+		$scheme = parse_url($url, PHP_URL_SCHEME);
+		$host = parse_url($url, PHP_URL_HOST);
+		if (!$scheme || !$host) {
+			return null;
+		}
+
+		$port = parse_url($url, PHP_URL_PORT);
+		return $scheme . '://' . $host . ($port ? ':' . $port : '');
 	}
 
 	/** @var bool Whether inline JS snippets are allowed */

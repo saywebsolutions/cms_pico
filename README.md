@@ -83,6 +83,9 @@ This fork serves two goals: a polished personal blogging platform on Nextcloud f
 
 ### Phase 1 — Blogging essentials
 
+- [ ] **Page caching** — Pico re-reads and re-purifies all content on every request (~seconds per page on a large site, falls over under mild concurrent load); cache rendered pages and invalidate on content change
+- [x] **First-class custom domain mapping** — `custom_domains` app setting maps domains to websites; requests through the `pico_proxy` routes get domain-root URLs, the reverse proxy is a dumb pass-through (no body rewriting, gzip intact). Follow-up: admin settings UI
+
 - [ ] **RSS/Atom feed** — generate a feed from blog posts (template-driven, like `blog-index`)
 - [ ] **SEO meta** — OpenGraph/Twitter card tags, canonical URLs, meta descriptions from front matter
 - [ ] **Sitemap.xml** — auto-generated from published pages
@@ -124,7 +127,17 @@ When the docs cannot answer your question, you can get help by either joining us
 
 ## Custom Domains (Advanced)
 
-By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_name/`. You can map a custom domain to a Pico site using your web server configuration.
+A website can be served from the root of its own domain (`https://myblog.com/`). Two pieces work together:
+
+1. **The `custom_domains` app setting** tells the app which domain belongs to which website. For all requests arriving through the app's `pico_proxy` routes, the app then generates every URL (pages, assets) relative to the domain root — no HTML rewriting needed anywhere:
+
+   ```bash
+   occ config:app:set cms_pico custom_domains --value='{"myblog.com": "my_site"}'
+   ```
+
+2. **A reverse proxy vhost** for the domain that passes all requests to the `pico_proxy` routes.
+
+When migrating an existing site, keep the old URL structure working: add transparent proxy mappings that serve any old paths directly (no redirect, no lost link equity). Fall back to **301 redirects** only for URLs that genuinely no longer have an equivalent.
 
 ### Apache
 
@@ -136,15 +149,26 @@ By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_
    <VirtualHost *:80>
        ServerName myblog.com
 
+       SSLProxyEngine On
        ProxyPreserveHost Off
-       ProxyPass / http://localhost/sites/my_site/
-       ProxyPassReverse / http://localhost/sites/my_site/
+
+       # transparent mappings keep old URL paths serving directly
+       # (place specific mappings before the generic ones below)
+       ProxyPass /old-path/ https://your-nextcloud.com/apps/cms_pico/pico_proxy/my_site/new-path/
+
+       # static app assets (theme CSS, plugins) keep their app path
+       ProxyPass /apps/cms_pico/ https://your-nextcloud.com/apps/cms_pico/
+       ProxyPassReverse /apps/cms_pico/ https://your-nextcloud.com/apps/cms_pico/
+
+       # everything else: the website is served from the domain root
+       ProxyPass / https://your-nextcloud.com/apps/cms_pico/pico_proxy/my_site/
+       ProxyPassReverse / https://your-nextcloud.com/apps/cms_pico/pico_proxy/my_site/
    </VirtualHost>
    ```
 
 3. **Enable the site and required modules**:
    ```bash
-   sudo a2enmod proxy proxy_http
+   sudo a2enmod proxy proxy_http ssl
    sudo a2ensite myblog.com.conf
    sudo systemctl reload apache2
    ```
@@ -153,6 +177,11 @@ By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_
    ```bash
    sudo certbot --apache -d myblog.com
    ```
+
+**Notes:**
+- If you use Remark42 comments on another origin, the app automatically extends the CSP (`script-src`/`connect-src`/`frame-src`) with the configured `comments_url` origin.
+- Verify the migration before switching DNS: `curl --resolve myblog.com:80:<server-ip> http://myblog.com/some/page` exercises the vhost while DNS still points at the old site.
+- The website stays reachable under its Nextcloud URL as well; consider adding a canonical `<link>` to your theme.
 
 ### Nginx
 
@@ -165,9 +194,19 @@ By default, Pico sites are accessible at `https://your-nextcloud.com/sites/site_
        listen 80;
        server_name myblog.com;
 
+       # transparent mappings keep old URL paths serving directly
+       location /old-path/ {
+           proxy_pass https://your-nextcloud.com/apps/cms_pico/pico_proxy/my_site/new-path/;
+       }
+
+       # static app assets (theme CSS, plugins) keep their app path
+       location /apps/cms_pico/ {
+           proxy_pass https://your-nextcloud.com/apps/cms_pico/;
+       }
+
+       # everything else: the website is served from the domain root
        location / {
-           proxy_pass http://localhost/sites/my_site/;
-           proxy_set_header Host $host;
+           proxy_pass https://your-nextcloud.com/apps/cms_pico/pico_proxy/my_site/;
            proxy_set_header X-Real-IP $remote_addr;
        }
    }

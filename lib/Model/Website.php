@@ -34,6 +34,7 @@ use OCA\CMSPico\Exceptions\WebsiteInvalidFilesystemException;
 use OCA\CMSPico\Exceptions\WebsiteInvalidOwnerException;
 use OCA\CMSPico\Files\StorageFolder;
 use OCA\CMSPico\Files\StorageUserFolder;
+use OCA\CMSPico\Service\ConfigService;
 use OCA\CMSPico\Service\MiscService;
 use OCA\CMSPico\Service\ThemesService;
 use OCP\Files\InvalidPathException;
@@ -285,8 +286,15 @@ class Website extends WebsiteCore
 			$route = Application::APP_NAME . '.Pico.getPage';
 			$parameters = ['site' => $this->getSite(), 'page' => ''];
 			return $this->urlGenerator->linkToRoute($route, $parameters) . '/';
-		} else {
-			return \OC::$WEBROOT . '/sites/' . urlencode($this->getSite()) . '/';
 		}
+
+		// websites with a custom domain are served from the domain root: the
+		// reverse proxy passes all requests to the pico_proxy routes, so all
+		// generated URLs must be relative to the domain root
+		if (Server::get(ConfigService::class)->getCustomDomain($this->getSite()) !== null) {
+			return '/';
+		}
+
+		return \OC::$WEBROOT . '/sites/' . urlencode($this->getSite()) . '/';
 	}
 }
