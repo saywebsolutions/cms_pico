@@ -58,6 +58,7 @@ class Website extends WebsiteCore
 	private IUserManager $userManager;
 	private IGroupManager $groupManager;
 	private IURLGenerator $urlGenerator;
+	private ConfigService $configService;
 	private ThemesService $themesService;
 	private MiscService $miscService;
 	private ?StorageFolder $folder = null;
@@ -68,6 +69,7 @@ class Website extends WebsiteCore
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IURLGenerator $urlGenerator,
+		ConfigService $configService,
 		ThemesService $themesService,
 		MiscService $miscService
 	) {
@@ -75,6 +77,7 @@ class Website extends WebsiteCore
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
 		$this->urlGenerator = $urlGenerator;
+		$this->configService = $configService;
 		$this->themesService = $themesService;
 		$this->miscService = $miscService;
 
@@ -291,7 +294,7 @@ class Website extends WebsiteCore
 		// websites with a custom domain are served from the domain root: the
 		// reverse proxy passes all requests to the pico_proxy routes, so all
 		// generated URLs must be relative to the domain root
-		if (Server::get(ConfigService::class)->getCustomDomain($this->getSite()) !== null) {
+		if ($this->configService->hasCustomDomain($this->getSite())) {
 			return '/';
 		}
 

@@ -83,7 +83,7 @@ This fork serves two goals: a polished personal blogging platform on Nextcloud f
 
 ### Phase 1 — Blogging essentials
 
-- [ ] **Page caching** — Pico re-reads and re-purifies all content on every request (~seconds per page on a large site, falls over under mild concurrent load); cache rendered pages and invalidate on content change
+- [x] **Page caching** — rendered pages of public websites are cached for anonymous visitors (distributed cache, e.g. Redis). Keys embed the website folder etag and all render-relevant settings, so entries self-invalidate on content/theme/config changes; per-request CSP nonces are re-substituted on every hit. Disable with `occ config:app:set cms_pico page_cache --value=0`. Cold-cache render is still slow (~seconds) — warm the cache after big content changes by sweeping your URLs
 - [x] **First-class custom domain mapping** — `custom_domains` app setting maps domains to websites; requests through the `pico_proxy` routes get domain-root URLs, the reverse proxy is a dumb pass-through (no body rewriting, gzip intact). Follow-up: admin settings UI
 
 - [ ] **RSS/Atom feed** — generate a feed from blog posts (template-driven, like `blog-index`)

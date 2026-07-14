@@ -27,6 +27,7 @@ namespace OCA\CMSPico\Service;
 
 use OCA\CMSPico\AppInfo\Application;
 use OCP\IConfig;
+use Psr\Log\LoggerInterface;
 
 class ConfigService
 {
@@ -66,8 +67,14 @@ class ConfigService
 	/** @var string JSON object mapping domains to website names, e.g. {"example.com": "my_site"} */
 	public const CUSTOM_DOMAINS = 'custom_domains';
 
+	/** @var string Whether rendered pages of public websites are cached ('1' or '0') */
+	public const PAGE_CACHE = 'page_cache';
+
 	/** @var IConfig */
 	protected $config;
+
+	/** @var LoggerInterface */
+	protected $logger;
 
 	/** @var array<string,string> */
 	protected $defaultValues;
@@ -75,11 +82,13 @@ class ConfigService
 	/**
 	 * ConfigService constructor.
 	 *
-	 * @param IConfig      $config
+	 * @param IConfig         $config
+	 * @param LoggerInterface $logger
 	 */
-	public function __construct(IConfig $config)
+	public function __construct(IConfig $config, LoggerInterface $logger)
 	{
 		$this->config = $config;
+		$this->logger = $logger;
 
 		$this->defaultValues = [
 			self::SYSTEM_TEMPLATES => '',
@@ -94,13 +103,15 @@ class ConfigService
 			self::LINK_MODE => (string) WebsitesService::LINK_MODE_LONG,
 			self::COMMENTS_URL => '',
 			self::CUSTOM_DOMAINS => '',
+			self::PAGE_CACHE => '1',
 		];
 	}
 
 	/**
 	 * Returns the configured custom domains as a domain => site map.
 	 *
-	 * Invalid entries are silently dropped.
+	 * Domains are normalized to lowercase; invalid entries are dropped
+	 * with a warning.
 	 *
 	 * @return array<string,string>
 	 */
@@ -113,30 +124,40 @@ class ConfigService
 
 		$domains = json_decode($json, true);
 		if (!is_array($domains)) {
+			$this->logger->warning('Ignoring invalid cms_pico custom_domains value: not a JSON object');
 			return [];
 		}
 
 		$result = [];
 		foreach ($domains as $domain => $site) {
-			if (is_string($domain) && is_string($site) && preg_match('/^[a-z0-9.-]+$/', $domain)) {
-				$result[$domain] = $site;
+			$domain = is_string($domain) ? strtolower(trim($domain)) : '';
+			if (!$domain || !is_string($site) || !preg_match('/^[a-z0-9][a-z0-9.-]*$/', $domain)) {
+				$this->logger->warning('Ignoring invalid cms_pico custom_domains entry', [
+					'domain' => $domain,
+				]);
+				continue;
 			}
+
+			$result[$domain] = $site;
 		}
 
 		return $result;
 	}
 
 	/**
-	 * Returns the custom domain of a website, or null if none is configured.
+	 * Checks whether a website is served from a custom domain.
+	 *
+	 * Multiple domains may map to the same website (e.g. an apex domain
+	 * and its www subdomain), so there is no single "the" domain of a
+	 * website - just whether it has one.
 	 *
 	 * @param string $site
 	 *
-	 * @return string|null
+	 * @return bool
 	 */
-	public function getCustomDomain(string $site): ?string
+	public function hasCustomDomain(string $site): bool
 	{
-		$domain = array_search($site, $this->getCustomDomains(), true);
-		return ($domain !== false) ? $domain : null;
+		return in_array($site, $this->getCustomDomains(), true);
 	}
 
 	/**

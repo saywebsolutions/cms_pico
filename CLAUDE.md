@@ -37,12 +37,17 @@ Theme source: `appdata/themes/` → published to `appdata_public/themes/` by rep
 
 **Test without DNS:** `curl --resolve saywebsolutions.com:80:161.35.234.38 http://saywebsolutions.com/<path>`
 
+**Page cache:** rendered pages cached in Redis for anonymous visitors (`X-Pico-Cache: HIT/MISS` header). Self-invalidates via website-folder etag in the key. Kill switch: `occ config:app:set cms_pico page_cache --value=0`. Warm after big content changes: sweep all URLs twice with `curl` (first pass renders, ~4s/page — keep concurrency ≤2 on cold cache).
+
 **Cutover checklist (remaining):**
-1. Rename website in Pico personal settings: "Blog" → "Say Web Solutions" (site_title)
-2. Point DNS A record for saywebsolutions.com (+www) to 161.35.234.38
-3. `sudo certbot --apache -d saywebsolutions.com -d www.saywebsolutions.com` (adds :443 vhost — re-add proxy/substitute/redirect directives to the SSL vhost if certbot doesn't copy them)
-4. Remap Remark42 comment URLs (page URLs change from `https://nc.saywebsolutions.com/apps/cms_pico/pico/web/blog/<slug>` to `https://saywebsolutions.com/blog/<slug>`): `remark42 remap` with a URL map file, same env as import
-5. Consider canonical `<link>` tags in theme (site now reachable via both hosts)
+1. Rename website in Pico personal settings: "Blog" → "Say Web Solutions" (site_title; page cache keys include the name, so this invalidates cleanly)
+2. Lower DNS TTL 3600 → 300 on apex A record (DigitalOcean DNS) ahead of time
+3. Pre-issue TLS cert via DNS-01 (`certbot` + DO DNS plugin) before the flip; build :443 vhost with same proxy config + :80 → HTTPS redirect
+4. Point DNS A record for saywebsolutions.com to 161.35.234.38 (currently 34.120.54.55, old Fresh site; no www record exists)
+5. Warm the page cache (sweep all 469 URLs), then verify over real DNS
+6. Remap Remark42 comment URLs (page URLs change from `https://nc.saywebsolutions.com/apps/cms_pico/pico/web/blog/<slug>` to `https://saywebsolutions.com/blog/<slug>`): `remark42 remap` with a URL map file, same env as import
+7. Canonical `<link>` tags in theme (site reachable via both hosts)
+8. Decommission old Deno Deploy project once stable
 
 ## Remark42 Comments
 

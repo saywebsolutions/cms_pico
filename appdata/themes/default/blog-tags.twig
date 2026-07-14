@@ -1,52 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% if meta.title %}{{ meta.title }} | {% endif %}{{ site_title }}</title>
-    {% if meta.description %}
-    <meta name="description" content="{{ meta.description|striptags }}">
-    {% endif %}
-    {% if meta.robots %}
-    <meta name="robots" content="{{ meta.robots|e('html_attr') }}">
-    {% endif %}
-    <link rel="stylesheet" href="{{ theme_url }}/style.css">
-</head>
-<body>
-    <header>
-        <h1><a href="{{ base_url ?: '/' }}">{{ site_title }}</a></h1>
-        {% include "partials/nav.twig" %}
-    </header>
+{% extends "base.twig" %}
 
-    <main>
-        <h1>{{ meta.title }}</h1>
+{% block content %}
+    <h1>{{ meta.title }}</h1>
 
-        {% set posts = pages("blog") %}
-        {% set tagPages = pages("blog/tags")|sort_by("title") %}
-        {% set counts = {} %}
-        {% for tp in tagPages %}
-            {% set c = 0 %}
-            {% set tag = tp.meta.tag|lower %}
-            {% for post in posts %}
-                {% if post.meta.tags and post.meta.tags|filter(t => t|lower == tag)|length > 0 %}
-                    {% set c = c + 1 %}
-                {% endif %}
-            {% endfor %}
-            {% set counts = counts|merge({ (tp.id): c }) %}
+    {% set posts = pages("blog") %}
+    {% set tagPages = pages("blog/tags")|sort_by("title") %}
+    {% set counts = {} %}
+    {% for tp in tagPages %}
+        {% set c = 0 %}
+        {% set tag = tp.meta.tag|lower %}
+        {% for post in posts %}
+            {% if post.meta.tags and post.meta.tags|filter(t => t|lower == tag)|length > 0 %}
+                {% set c = c + 1 %}
+            {% endif %}
         {% endfor %}
-        {% set maxCount = max(counts|default({'': 1})) %}
+        {% set counts = counts|merge({ (tp.id): c }) %}
+    {% endfor %}
+    {% set maxCount = max(counts|default({'': 1})) %}
 
-        <div class="tag-cloud">
-        {% for tp in tagPages %}
-            {% set c = counts[tp.id] %}
-            {% set ratio = c / maxCount %}
-            {% set size = ratio > 0.6 ? 'tag-xl' : (ratio > 0.3 ? 'tag-lg' : (ratio > 0.1 ? 'tag-md' : 'tag-sm')) %}
-            <a class="tag {{ size }}" href="{{ tp.url }}">{{ tp.meta.tag }}&nbsp;({{ c }})</a>
-        {% endfor %}
-        </div>
-    </main>
-
-    <footer>
-    </footer>
-</body>
-</html>
+    <div class="tag-cloud">
+    {% for tp in tagPages %}
+        {% set c = counts[tp.id] %}
+        {% set ratio = c / maxCount %}
+        {% set size = ratio > 0.6 ? 'tag-xl' : (ratio > 0.3 ? 'tag-lg' : (ratio > 0.1 ? 'tag-md' : 'tag-sm')) %}
+        <a class="tag {{ size }}" href="{{ tp.url }}">{{ tp.meta.tag }}&nbsp;({{ c }})</a>
+    {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,7 @@
+<article class="post">
+    <h2><a href="{{ page.url }}">{{ page.title }}</a></h2>
+    <p class="date">{{ page.date_formatted }}</p>
+    {% if page.description %}
+    <p class="excerpt">{{ page.description }}</p>
+    {% endif %}
+</article>

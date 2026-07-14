@@ -30,6 +30,9 @@
 		<testsuite name="cms_pico">
 			<directory>./Integration</directory>
 		</testsuite>
+		<testsuite name="unit">
+			<directory>./Unit</directory>
+		</testsuite>
 	</testsuites>
 	<filter>
 		<whitelist>

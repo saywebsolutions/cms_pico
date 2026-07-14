@@ -24,31 +24,31 @@ declare(strict_types=1);
 
 namespace OCA\CMSPico\Http;
 
-use OCA\CMSPico\Model\PicoPage;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\EmptyContentSecurityPolicy;
 use OCP\AppFramework\Http\Response;
 
 class PicoPageResponse extends Response
 {
-	/** @var PicoPage */
-	private $page;
+	/** @var string */
+	private $output;
 
 	/**
 	 * PicoPageResponse constructor.
 	 *
-	 * @param PicoPage $page
+	 * @param string $output
+	 * @param bool   $notFound
 	 */
-	public function __construct(PicoPage $page)
+	public function __construct(string $output, bool $notFound = false)
 	{
-		$this->page = $page;
+		$this->output = $output;
 
 		parent::__construct();
 
 		$this->addHeader('Content-Disposition', 'inline; filename=""');
 		$this->setContentSecurityPolicy(new PicoContentSecurityPolicy());
 
-		if ($page->is404Content()) {
+		if ($notFound) {
 			$this->setStatus(Http::STATUS_NOT_FOUND);
 		}
 	}
@@ -74,6 +74,6 @@ class PicoPageResponse extends Response
 	 */
 	public function render(): string
 	{
-		return $this->page->render();
+		return $this->output;
 	}
 }

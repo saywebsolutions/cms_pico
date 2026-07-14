@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\CMSPico\Tests\Utils\Manager;
 
 use OCA\CMSPico\Model\Website;
+use OCA\CMSPico\Model\WebsiteFactory;
 use OCA\CMSPico\Service\WebsitesService;
 
 class TestWebsitesManager extends TestManager
@@ -106,7 +107,7 @@ class TestWebsitesManager extends TestManager
 			return $originalWebsite;
 		}
 
-		$website = new Website($data);
+		$website = \OC::$server->query(WebsiteFactory::class)->create($data);
 		$templateName = $data['template'] ?? '';
 
 		$this->testUsersManager->runAsUser($data['user_id'], function () use ($website, $templateName) {

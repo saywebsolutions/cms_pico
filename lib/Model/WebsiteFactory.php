@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\CMSPico\Model;
 
+use OCA\CMSPico\Service\ConfigService;
 use OCA\CMSPico\Service\MiscService;
 use OCA\CMSPico\Service\ThemesService;
 use OCP\IConfig;
@@ -37,6 +38,7 @@ class WebsiteFactory
 	private IUserManager $userManager;
 	private IGroupManager $groupManager;
 	private IURLGenerator $urlGenerator;
+	private ConfigService $configService;
 	private ThemesService $themesService;
 	private MiscService $miscService;
 
@@ -45,6 +47,7 @@ class WebsiteFactory
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IURLGenerator $urlGenerator,
+		ConfigService $configService,
 		ThemesService $themesService,
 		MiscService $miscService
 	) {
@@ -52,6 +55,7 @@ class WebsiteFactory
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
 		$this->urlGenerator = $urlGenerator;
+		$this->configService = $configService;
 		$this->themesService = $themesService;
 		$this->miscService = $miscService;
 	}
@@ -64,6 +68,7 @@ class WebsiteFactory
 			$this->userManager,
 			$this->groupManager,
 			$this->urlGenerator,
+			$this->configService,
 			$this->themesService,
 			$this->miscService
 		);

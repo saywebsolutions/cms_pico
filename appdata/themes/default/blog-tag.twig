@@ -1,44 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% if meta.title %}{{ meta.title }} | {% endif %}{{ site_title }}</title>
-    {% if meta.description %}
-    <meta name="description" content="{{ meta.description|striptags }}">
-    {% endif %}
-    {% if meta.robots %}
-    <meta name="robots" content="{{ meta.robots|e('html_attr') }}">
-    {% endif %}
-    <link rel="stylesheet" href="{{ theme_url }}/style.css">
-</head>
-<body>
-    <header>
-        <h1><a href="{{ base_url ?: '/' }}">{{ site_title }}</a></h1>
-        {% include "partials/nav.twig" %}
-    </header>
+{% extends "base.twig" %}
 
-    <main>
-        <h1>{{ meta.title }}</h1>
-        <p class="tag-page-nav"><a href="{{ "blog/tags"|link }}">All tags</a></p>
+{% block content %}
+    <h1>{{ meta.title }}</h1>
+    <p class="tag-page-nav"><a href="{{ "blog/tags"|link }}">All tags</a></p>
 
-        <section class="blog-posts">
-        {% set tag = meta.tag|lower %}
-        {% for page in pages("blog")|sort_by("time")|reverse %}
-            {% if page.meta.tags and page.meta.tags|filter(t => t|lower == tag)|length > 0 %}
-            <article class="post">
-                <h2><a href="{{ page.url }}">{{ page.title }}</a></h2>
-                <p class="date">{{ page.date_formatted }}</p>
-                {% if page.description %}
-                <p class="excerpt">{{ page.description }}</p>
-                {% endif %}
-            </article>
-            {% endif %}
-        {% endfor %}
-        </section>
-    </main>
-
-    <footer>
-    </footer>
-</body>
-</html>
+    <section class="blog-posts">
+    {% set tag = meta.tag|lower %}
+    {% for page in pages("blog")|sort_by("time")|reverse %}
+        {% if page.meta.tags and page.meta.tags|filter(t => t|lower == tag)|length > 0 %}
+        {% include "partials/post-item.twig" %}
+        {% endif %}
+    {% endfor %}
+    </section>
+{% endblock %}

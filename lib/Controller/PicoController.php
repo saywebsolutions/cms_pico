@@ -47,6 +47,7 @@ use OCA\CMSPico\Http\NotPermittedResponse;
 use OCA\CMSPico\Http\PicoAssetResponse;
 use OCA\CMSPico\Http\PicoErrorResponse;
 use OCA\CMSPico\Http\PicoPageResponse;
+use OCA\CMSPico\Service\PageCacheService;
 use OCA\CMSPico\Service\WebsitesService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -70,21 +71,26 @@ class PicoController extends Controller
 	/** @var WebsitesService */
 	private $websitesService;
 
+	/** @var PageCacheService */
+	private $pageCacheService;
+
 	/**
 	 * PicoController constructor.
 	 *
-	 * @param IRequest        $request
-	 * @param IURLGenerator   $urlGenerator
-	 * @param IUserSession    $userSession
-	 * @param IL10N           $l10n
-	 * @param WebsitesService $websitesService
+	 * @param IRequest         $request
+	 * @param IURLGenerator    $urlGenerator
+	 * @param IUserSession     $userSession
+	 * @param IL10N            $l10n
+	 * @param WebsitesService  $websitesService
+	 * @param PageCacheService $pageCacheService
 	 */
 	public function __construct(
 		IRequest $request,
 		IURLGenerator $urlGenerator,
 		IUserSession $userSession,
 		IL10N $l10n,
-		WebsitesService $websitesService
+		WebsitesService $websitesService,
+		PageCacheService $pageCacheService
 	) {
 		parent::__construct(Application::APP_NAME, $request);
 
@@ -92,6 +98,7 @@ class PicoController extends Controller
 		$this->userSession = $userSession;
 		$this->l10n = $l10n;
 		$this->websitesService = $websitesService;
+		$this->pageCacheService = $pageCacheService;
 	}
 
 	/**
@@ -109,8 +116,20 @@ class PicoController extends Controller
 		$userId = $this->userSession->isLoggedIn() ? $this->userSession->getUser()->getUID() : null;
 
 		try {
+			$cachedPage = $this->pageCacheService->get($site, $page, $userId, $proxyRequest);
+			if ($cachedPage !== null) {
+				$response = new PicoPageResponse($cachedPage['html'], $cachedPage['notFound']);
+				return $response->addHeader('X-Pico-Cache', 'HIT');
+			}
+
 			$picoPage = $this->websitesService->getPage($site, $page, $userId, $proxyRequest);
-			return new PicoPageResponse($picoPage);
+			$output = $picoPage->render();
+			$notFound = $picoPage->is404Content();
+
+			$this->pageCacheService->set($site, $page, $userId, $proxyRequest, $output, $notFound);
+
+			$response = new PicoPageResponse($output, $notFound);
+			return $response->addHeader('X-Pico-Cache', 'MISS');
 		} catch (WebsiteNotFoundException | WebsiteInvalidOwnerException $e) {
 			return new NotFoundResponse($this->l10n->t(
 				'The requested website could not be found on the server. Maybe the website was deleted?'
