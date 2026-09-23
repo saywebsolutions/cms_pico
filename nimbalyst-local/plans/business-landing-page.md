@@ -38,9 +38,10 @@ Replace the two-paragraph home page with a conversion-oriented landing page that
 The full ten-section landing page below (research, skeleton, mockup, contact form) is kept as reference for a later version. The first version is deliberately simpler:
 
 - **Format:** first-person home page in plain language. Short intro, one bulleted list of what Kyle takes on, one call to action (free consultation), one paid urgent option. No marketing voice, no "practical, secure, scalable" adjective lists.
+- **Voice (Kyle's instruction):** it must read like Kyle wrote it. First person, concrete nouns, short sentences, contractions, no buzzwords ("transform", "leverage", "solutions", "seamless"), no generic marketing phrasing, no bracketed hedges. The message of the call to action: happy to help with anything from the simplest IT question, an e-commerce site, or marketing, all the way to custom software projects and consulting.
 - **List order:** custom software projects first, email deliverability second (Kyle's order). The rest of the order below is a draft pending Kyle.
-- **Booking (free consultation):** Nextcloud Calendar Appointments on do3 (Calendar app 6.5.2), linked from the page. Link only, no embed, no CSP change. Verified protections in the installed app: booking POST rate-limited to 10 per IP per 20 minutes (works because Redis is the distributed cache), double opt-in via a 32-character emailed token, unconfirmed bookings do not hold slots and expire after 24 hours (background cleanup job), visitor free text only reaches Kyle after confirmation. No CAPTCHA or honeypot; residual risk is backscatter confirmation mail, capped by the rate limit. Appointment config: "Free consultation", 30 min, daily maximum about 3, minimum notice 24 h.
-- **Urgent paid option ($100, immediate access):** Zoho Checkout payment page with Zoho Payments as gateway (Kyle uses Zoho Payments, not Stripe). Zoho Payments' own payment links are per-customer and go inactive after one payment, so they are not suitable for a public button. Checkout page: fixed $100 one-time; name, email, phone required; custom textarea "What's going on?"; built-in CAPTCHA on; thank-you message carries Kyle's cell number and a link to a second appointment config "Urgent (paid)" (30 min, minimum notice 1 h, max 3–4 per day). Link only from the home page, no embedded button. Payment is verified in Zoho before the call; refund if the promised window is missed; deactivate the page when unavailable. Fees: 2.9% + 30¢ domestic cards, ACH 0.8% capped at $5, no monthly fee. Checkout free plan limits vary between Zoho pages (older docs: 3 pages, 50 payments); confirm when logged in.
+- **Booking (free consultation):** Nextcloud Calendar Appointments on do3 (Calendar app 6.5.2), linked from the page. Link only, no embed, no CSP change. Verified protections in the installed app: booking POST rate-limited to 10 per IP per 20 minutes (works because Redis is the distributed cache), double opt-in via a 32-character emailed token, unconfirmed bookings do not hold slots and expire after 24 hours (background cleanup job), visitor free text only reaches Kyle after confirmation. No CAPTCHA or honeypot; residual risk is backscatter confirmation mail, capped by the rate limit. Appointment config: "Free consultation", 30 min, daily maximum about 3, minimum notice 24 h, location = phone or a Nextcloud Talk link. Click path: Calendar app → Appointments (left sidebar) → New. The public link has the shape `https://nc.saywebsolutions.com/index.php/apps/calendar/appointment/<token>`. The visitor picks a slot, enters name and email, and confirms from the email; the event then appears in Kyle's calendar.
+- **Urgent paid option ($100, immediate access):** Zoho Checkout payment page with Zoho Payments as gateway (Kyle uses Zoho Payments, not Stripe). Zoho Payments' own payment links are per-customer and go inactive after one payment, so they are not suitable for a public button. Checkout page: fixed $100 one-time; name, email, phone required; custom textarea "What's going on?"; built-in CAPTCHA on; thank-you message carries Kyle's cell number and a link to a second appointment config "Urgent (paid)" (30 min, minimum notice 1 h, max 3–4 per day). Link only from the home page, no embedded button (the embedded button needs external script and iframe origins the CSP does not allow). If Checkout's thank-you message cannot carry a link, use its redirect-URL option to send the payer straight to the urgent appointment page instead. The urgent appointment link must appear only after payment, never on the public page. Payment is verified in Zoho before the call; refund if the promised window is missed; deactivate the page when unavailable. Fees: 2.9% + 30¢ domestic cards, ACH 0.8% capped at $5, no monthly fee. Checkout free plan limits vary between Zoho pages (older docs: 3 pages, 50 payments); confirm when logged in.
 - **Superseded by the above:** §4.2 lead-capture options A/B/C and the contact form; §7 pricing question (only the $100 urgent price appears for now).
 
 ### Draft `content/index.md` (v1)
@@ -91,6 +92,14 @@ Or email me: kyle@saywebsolutions.com
 2. Replace `content/index.md` with the draft above, placeholders filled.
 3. Verify on saywebsolutions.com: links resolve, no CSP console errors, page renders from cache.
 4. Later, if wanted: the fuller landing page below (spoke pages, proof posts, JSON-LD).
+
+### Handoff notes (for whoever picks this up)
+
+- **Where things are:** content at `/home/user/Nextcloud/CMS/web/content/` (Nextcloud sync publishes on save); theme at `appdata/themes/default/` (deploy steps in `CLAUDE.md`); this doc plus a condensed copy of the plan in `README.md`. v1 needs no theme change, no JavaScript, no CSP change, no deploy: it is a single Markdown file edit.
+- **Git state on 2026-09-23:** branch `security/harden-csp-htmlpurifier`, tracked on origin. The working tree also carries unrelated, uncommitted page-cache-salt work (`lib/Pico.php`, `lib/Service/ConfigService.php`, `lib/Service/PageCacheService.php`, one line each in `README.md` and `CUTOVER.md`) and a comments toggle in `index.twig`. Do not stage those with landing-page changes. `.nimbalyst/` and `tags` are untracked local files.
+- **Verify after publishing:** `curl -sI https://saywebsolutions.com/` returns 200 with `X-Pico-Cache: MISS` then `HIT` on the second request; browser console shows no CSP violations; both links open; the page reads correctly on a phone. Rollback is restoring the previous `index.md`.
+- **Do not add** HSTS to the site (Kyle declined it), external fonts, trackers, or embeds.
+- **Blocked on Kyle:** the "Needed from Kyle" list above. Everything else in v1 can proceed with placeholders, but do not publish `index.md` with placeholders in it.
 
 ---
 
@@ -280,7 +289,9 @@ Either A or B: page cache renders the form once per etag, so nothing per-request
 
 ---
 
-## 7. Open questions (to decide before build)
+## 7. Open questions (v2)
+
+Resolved for v1 by §0: 1 (plain first-person list, no headline formula), 2 (flat list in Kyle's order), 3 (booking link, no form), 4 (only the $100 urgent price on the page), 7 (Nextcloud Appointments as the booking page). Still open, and only relevant to v2: 5 and 6.
 
 1. **Positioning spine:** ownership ("you actually own") vs. practicality ("does the boring work") vs. founder-led ("built by the person you talk to")? Default: ownership headline, founder-led subhead.
 2. **Service grouping:** Build / Run / Grow buckets vs. by buyer type vs. flat list of seven? Default: Build/Run/Grow.
@@ -292,7 +303,7 @@ Either A or B: page cache renders the form once per etag, so nothing per-request
 
 ---
 
-## 8. Implementation tasks
+## 8. Implementation tasks (v2; v1 steps are in §0)
 
 - [ ] Decisions on §7 recorded here
 - [ ] Gather §5 content
