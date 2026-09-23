@@ -115,6 +115,55 @@ This fork serves two goals: a polished personal blogging platform on Nextcloud f
 - [ ] **Distribution** — publish releases (GitHub releases with prebuilt tarball; evaluate App Store listing vs. coordinating with upstream)
 - [ ] **Nextcloud version tracking** — keep pace with new major Nextcloud releases
 
+## saywebsolutions.com home page (landing page plan)
+
+Status: planning, September 2026. Market research, a desktop mockup, and the fuller later version live in [`nimbalyst-local/plans/business-landing-page.md`](nimbalyst-local/plans/business-landing-page.md).
+
+**What the research said** (dev shops, MSPs, AI consultancies, e-commerce/email/SMS agencies, B2B landing-page benchmarks, Sept 2026): small shops convert on reliability, plain outcomes, visible pricing and direct access to the person doing the work; ownership and lock-in are a top-three buyer pain in every service line; the call to action should name the deliverable ("book a free call", "get my free audit") rather than "contact us"; keep the page near 500 words at a grade-8 reading level; the technical blog is the main trust asset.
+
+**Version 1 (current direction)**
+
+- Replace the two-paragraph `content/index.md` with a first-person page in plain language: short intro, one bulleted list of what Kyle takes on, one free-consultation call to action, one paid urgent option. No marketing voice.
+- Service list order: custom software projects, email deliverability, e-commerce sites, IT help and servers, email and SMS marketing, automation and AI, consulting. The order after the first two is a draft.
+- **Free consultation:** link to a Nextcloud Calendar appointment on the same server ("Free consultation", 30 min, daily maximum about 3, minimum notice 24 h). Plain link, no embed, no CSP change. The Calendar app (6.5.2) rate-limits booking attempts to 10 per IP per 20 minutes (Redis-backed), requires the visitor to confirm by email, and unconfirmed bookings do not hold slots and expire after 24 hours. No CAPTCHA; residual risk is confirmation-mail backscatter, bounded by the rate limit.
+- **Urgent help, $100, immediate:** a Zoho Checkout payment page with Zoho Payments as the gateway (fixed $100 one-time; name, email and phone required; a "What's going on?" textarea; built-in CAPTCHA on). The thank-you message shows the cell number and links to a second "Urgent (paid)" appointment (30 min, minimum notice 1 h, max 3–4 per day). Plain link from the page, no embedded button. Payment is checked in Zoho before the call; refund if the promised window is missed; deactivate the page when unavailable. Zoho Payments' own payment links are per-customer and single-use, so they are not used for this. Fees: 2.9% + 30¢ on domestic cards, no monthly fee.
+- **Needed before publishing:** both appointment links, the Checkout page URL, the start year, the cell number and hours window for the urgent offer, and the final list order. `content/index.md` is published by Nextcloud sync the moment it is saved; the page cache invalidates on the folder etag.
+
+**Draft `content/index.md` (v1)**
+
+```markdown
+---
+title: Say Web Solutions
+description: Custom software, email deliverability, e-commerce, IT help and marketing for small businesses. Book a free consultation.
+hidden: true
+comments: false
+---
+
+Hi, I'm Kyle. I build software and fix computer problems for small businesses. I've been doing this since [YEAR], and most of what I learn ends up on the blog.
+
+Here's the kind of work I take on:
+
+- **Custom software projects.** Web apps, internal tools, and integrations between systems that don't talk to each other. I also take on older PHP and Laravel apps that nobody wants to touch.
+- **Email deliverability.** If your mail is landing in spam, I'll fix SPF, DKIM and DMARC, clean up your sending setup, and get you past the Gmail and Yahoo bulk-sender rules.
+- **E-commerce sites.** Shopify and WooCommerce setup, fixes, and migrations. Hooking your store up to inventory, shipping and accounting so you stop retyping orders.
+- **IT help and servers.** Linux servers, backups, Nextcloud, hosting, TLS, and the everyday "why is this broken" questions. Nothing is too small.
+- **Email and SMS marketing.** Campaigns, automated flows, and doing SMS the legal way: 10DLC registration, consent, opt-outs.
+- **Automation and AI.** Taking repetitive work off your plate with scripts and integrations, and AI where it actually helps. I'll tell you when it doesn't.
+- **Consulting.** A second opinion on a quote, a plan for a project, or someone to ask before you buy something expensive.
+
+I'm happy to help with anything from the simplest IT question to a full custom software project. If you're not sure which of these your problem is, that's fine. Book a call and we'll figure it out together.
+
+**[Book a free 30-minute call](BOOKING_URL)**
+
+Or email me: kyle@saywebsolutions.com
+
+**Need help right now?** Pay $100 and I'll call you within an hour, 8am to 8pm Central. That gets you 30 minutes of hands-on help with whatever is broken, and the $100 is credited toward any bigger job that comes out of it. If I can't reach you inside the hour, full refund.
+
+[Get urgent help now](ZOHO_CHECKOUT_URL)
+```
+
+**Version 2 (later, optional):** the fuller page in the plan doc: Build / Run / Grow service cards with spoke pages, case studies and a testimonial, founder block, featured posts, `Organization` JSON-LD, canonical link, proof posts (site migration write-up, page cache, an agentic workflow, 10DLC setup, refreshed Postfix/DKIM/SPF guide).
+
 ## Getting help
 
 Something went wrong? You need help? No worries, we will help!
